@@ -10,33 +10,29 @@
             <div class="card-header bg-primary text-white"><h4>Consulta de OS</h4></div>
             <div class="card-body">
                 <form method="POST" class="row g-3">
-                    <div class="col-auto">
-                        <input type="text" name="os_id" class="form-control" placeholder="ID da OS" required>
-                    </div>
+                    <div class="col-auto"><input type="text" name="os_id" class="form-control" placeholder="ID da OS" required></div>
                     <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
                 </form>
 
                 {% if os %}
                 <div class="mt-4 p-3 border rounded bg-white">
-                    <h5>Detalhes da OS #{{ os.id }}</h5>
+                    <h5>OS #{{ os.id }} - Status: <span class="badge bg-info">{{ os.status_formatado }}</span></h5>
                     <div class="row">
-                        <div class="col-md-4"><strong>Status:</strong> <span class="badge bg-info">{{ os.status_formatado }}</span></div>
-                        <div class="col-md-4"><strong>Abertura:</strong> {{ os.data_abertura }}</div>
-                        <div class="col-md-4"><strong>Diagnóstico:</strong> {{ os.diagnostico or 'Nenhum' }}</div>
+                        <div class="col-md-6"><p><strong>Abertura:</strong> {{ os.data_abertura }}</p></div>
+                        <div class="col-md-6"><p><strong>Diagnóstico:</strong> {{ os.diagnostico or 'Nenhum' }}</p></div>
                     </div>
-                    
                     <hr>
-                    
-                    <div style="white-space: pre-wrap; font-family: sans-serif;">
-                        <p><strong>Mensagem Abertura:</strong><br>{{ os.mensagem_abertura }}</p>
-                        <p><strong>Resposta:</strong><br>{{ os.mensagem_resposta }}</p>
-                        <p class="text-danger"><strong>Justificativa SLA:</strong><br>{{ os.mensagem_justificativa }}</p>
+                    <div style="white-space: pre-wrap; font-family: monospace; background: #f8f9fa; padding: 10px;">
+                        <strong>Mensagem Abertura:</strong>
+                        {{ os.mensagem }}
+                        <br><br>
+                        <strong>Resposta:</strong>
+                        {{ os.mensagem_resposta }}
                     </div>
 
-                    {% if os.status_raw == 'F' %}
+                    {% if os.status == 'F' %}
                     <form action="/update_os" method="POST" class="mt-3">
                         <input type="hidden" name="os_id" value="{{ os.id }}">
-                        <label>Alterar Diagnóstico:</label>
                         <select name="id_diagnostico" class="form-select mb-2">
                             {% for d in diagn_list %}
                                 <option value="{{ d.id }}" {% if d.id == os.id_su_diagnostico %}selected{% endif %}>{{ d.descricao }}</option>
