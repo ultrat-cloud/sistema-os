@@ -4,7 +4,7 @@ import bcrypt
 from psycopg2.extras import RealDictCursor
 import logging
 
-# Configuração de logs
+# Configuração de logs para auditoria de erros
 logging.basicConfig(
     filename="erros_os.log",
     level=logging.ERROR,
@@ -27,7 +27,10 @@ def init_routes(app):
                 cur.execute("SELECT * FROM public.users WHERE email=%s AND ativo=TRUE", (email,))
                 user = cur.fetchone()
                 cur.close(); conn.close()
+                
                 if user and bcrypt.checkpw(senha, user["senha_hash"].encode("utf-8")):
+                    # Segurança: Ativa a sessão permanente definida no main.py
+                    session.permanent = True  
                     session["user"] = user["nome"]
                     get_flashed_messages() 
                     return redirect(url_for("dashboard"))
@@ -111,13 +114,13 @@ def init_routes(app):
             erro_str = str(e).lower()
             logging.error(f"Erro ao atualizar OS {os_id}: {e}")
             
-            # Aqui está o norte para o problema:
+            # Diagnóstico instruído para o usuário final
             if "denied" in erro_str or "privilege" in erro_str:
-                msg = "Erro de Permissão: O usuário do banco não tem permissão para esta alteração (UPDATE)."
+                msg = "Erro de Permissão: O usuário não possui privilégio de escrita no banco."
             elif "foreign key" in erro_str:
                 msg = "Erro de Integridade: O diagnóstico selecionado é inválido."
             elif "lost connection" in erro_str or "gone away" in erro_str:
-                msg = "Erro de Conexão: O banco de dados desconectou durante a gravação."
+                msg = "Erro de Conexão: O banco de dados desconectou."
             else:
                 msg = f"Falha ao salvar: {str(e)}"
             
@@ -130,7 +133,6 @@ def init_routes(app):
 
     @app.route("/logout")
     def logout():
-        get_flashed_messages()
         session.pop("user", None)
         flash("Você saiu do sistema.", "info")
         return redirect(url_for("login"))
