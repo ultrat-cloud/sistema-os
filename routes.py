@@ -47,19 +47,55 @@ def init_routes(app):
             try:
                 conn = get_mysql_conn()
                 cur = conn.cursor(dictionary=True)
-                sql = """SELECT t.id, c.id AS id_cliente, c.razao AS cliente, 
-                         CASE t.status WHEN 'F' THEN 'Finalizada' ELSE 'Outro' END as status_formatado,
-                         t.status as status_raw, 
-                         t.data_abertura, t.data_agenda, t.data_fechamento,
-                         t.mensagem AS mensagem_abertura, 
-                         t.mensagem_resposta, 
-                         t.justificativa_sla_atrasado AS mensagem_justificativa,
-                         t.id_su_diagnostico, 
-                         d.descricao AS diagnostico
-                         FROM su_oss_chamado t 
-                         LEFT JOIN cliente c ON c.id = t.id_cliente
-                         LEFT JOIN su_diagnostico d ON d.id = t.id_su_diagnostico
-                         WHERE t.id = %s"""
+                sql = """
+                SELECT 
+                    tabela_os.id,
+                    tabela_cliente.id AS id_cliente,
+                    tabela_cliente.razao AS cliente,
+                    tabela_estrutura.descricao AS estrutura,
+                
+                    CASE tabela_os.tipo
+                        WHEN 'C' THEN tabela_cliente.razao
+                        WHEN 'E' THEN tabela_estrutura.descricao
+                        ELSE NULL
+                    END AS cliente_estrutura,
+                
+                    CASE tabela_os.status 
+                        WHEN 'A' THEN 'Aberta'
+                        WHEN 'AN' THEN 'Análise'
+                        WHEN 'EN' THEN 'Encaminhada'
+                        WHEN 'AS' THEN 'Assumida'
+                        WHEN 'AG' THEN 'Agendada'
+                        WHEN 'DS' THEN 'Deslocamento'
+                        WHEN 'EX' THEN 'Execução'
+                        WHEN 'F' THEN 'Finalizada'
+                        WHEN 'RAG' THEN 'Aguardando Reagendamento'
+                        ELSE 'Outro'
+                    END AS status_formatado,
+                
+                    tabela_os.status AS status_raw,
+                    tabela_os.data_abertura,
+                    tabela_os.data_agenda,
+                    tabela_os.data_fechamento,
+                    tabela_os.mensagem AS mensagem_abertura,
+                    tabela_os.mensagem_resposta,
+                    tabela_os.justificativa_sla_atrasado AS mensagem_justificativa,
+                    tabela_os.id_su_diagnostico,
+                    tabela_diagnostico.descricao AS diagnostico
+                
+                FROM su_oss_chamado AS tabela_os
+                
+                LEFT JOIN cliente AS tabela_cliente
+                    ON tabela_cliente.id = tabela_os.id_cliente
+                
+                LEFT JOIN estrutura AS tabela_estrutura
+                    ON tabela_estrutura.id = tabela_os.id_estrutura
+                
+                LEFT JOIN su_diagnostico AS tabela_diagnostico
+                    ON tabela_diagnostico.id = tabela_os.id_su_diagnostico
+                
+                WHERE tabela_os.id = %s
+                """
                 cur.execute(sql, (os_id,))
                 os_data = cur.fetchone()
                 
