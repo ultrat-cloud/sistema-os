@@ -26,7 +26,6 @@ def init_routes(app):
                 cur.execute("SELECT * FROM public.users WHERE email=%s AND ativo=TRUE", (email,))
                 user = cur.fetchone()
                 cur.close(); conn.close()
-
                 if user and bcrypt.checkpw(senha, user["senha_hash"].encode("utf-8")):
                     session["user"] = user["nome"]
                     return redirect(url_for("dashboard"))
@@ -47,12 +46,13 @@ def init_routes(app):
             try:
                 conn = get_mysql_conn()
                 cur = conn.cursor(dictionary=True)
+                # SQL Reforçado: usamos IFNULL para evitar que datas ruins quebrem o DATE_FORMAT
                 sql = """SELECT t.id, c.id AS id_cliente, c.razao AS cliente, 
                          CASE t.status WHEN 'F' THEN 'Finalizada' ELSE 'Outro' END as status_formatado,
                          t.status as status_raw, 
-                         DATE_FORMAT(t.data_abertura, '%d/%m/%Y %H:%i:%s') AS data_abertura,
-                         DATE_FORMAT(t.data_agenda, '%d/%m/%Y %H:%i:%s') AS data_agendamento,
-                         DATE_FORMAT(t.data_fechamento, '%d/%m/%Y %H:%i:%s') AS data_finalizacao,
+                         IFNULL(DATE_FORMAT(t.data_abertura, '%d/%m/%Y %H:%i:%s'), '-') AS data_abertura,
+                         IFNULL(DATE_FORMAT(t.data_agenda, '%d/%m/%Y %H:%i:%s'), 'Não definido') AS data_agendamento,
+                         IFNULL(DATE_FORMAT(t.data_fechamento, '%d/%m/%Y %H:%i:%s'), 'Não finalizada') AS data_finalizacao,
                          t.mensagem AS mensagem_abertura, t.mensagem_resposta, t.justificativa_sla_atrasado AS mensagem_justificativa,
                          t.id_su_diagnostico, d.descricao AS diagnostico
                          FROM su_oss_chamado t 
@@ -67,8 +67,8 @@ def init_routes(app):
                     diagn_list = cur.fetchall()
                 cur.close(); conn.close()
             except Exception as e:
-                logging.error(f"Erro na busca: {e}")
-                flash("Erro ao consultar o banco de dados.", "danger")
+                logging.error(f"Erro na busca do ID {os_id}: {str(e)}")
+                flash("Ocorreu um erro ao processar esta OS específica.", "danger")
                 
         return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
