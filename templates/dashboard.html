@@ -12,13 +12,13 @@
             <div class="card-body">
                 <form method="POST" class="row g-3">
                     <div class="col-auto">
-                        <input type="text" name="os_id" class="form-control" placeholder="Digite o ID da OS" required>
+                        <input type="text" name="os_id" class="form-control" placeholder="ID da OS" required>
                     </div>
                     <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
                 </form>
 
                 {% if os %}
-                <hr><h5>OS #{{ os.id }} - {{ os.assunto }}</h5>
+                <hr><h5>OS #{{ os.id }}</h5>
                 <p>Status: <span class="badge {{ 'bg-success' if os.status == 'F' else 'bg-warning' }}">{{ os.status }}</span></p>
                 
                 {% if os.status == 'F' %}
@@ -28,12 +28,14 @@
                         <label class="form-label">Selecione o Diagnóstico:</label>
                         <select name="id_diagnostico" class="form-select">
                             {% for d in diagn_list %}
-                                <option value="{{ d.id_diagnostico }}">{{ d.nome_diagnostico }}</option>
+                                <option value="{{ d.id }}">{{ d.descricao }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <button type="submit" class="btn btn-success w-100">Atualizar Diagnóstico</button>
                 </form>
+                {% else %}
+                <p class="text-danger">A OS não está finalizada (Status 'F').</p>
                 {% endif %}
                 {% endif %}
             </div>
