@@ -30,7 +30,7 @@ def init_routes(app):
                 
                 if user and bcrypt.checkpw(senha, user["senha_hash"].encode("utf-8")):
                     # Segurança: Ativa a sessão permanente definida no main.py
-                    session.permanent = True  
+                    session.permanent = False  
                     session["user"] = user["nome"]
                     get_flashed_messages() 
                     return redirect(url_for("dashboard"))
