@@ -75,16 +75,32 @@
                         {% if os.status_raw == 'F' %}
                             <form action="/update_os" method="POST">
                                 <input type="hidden" name="os_id" value="{{ os.id }}">
-                                <label class="form-label">Alterar Diagnóstico:</label>
-                                <select name="id_diagnostico" class="form-select mb-2">
+                                
+                                <label class="form-label">Buscar e Alterar Diagnóstico:</label>
+                                <input type="text" id="buscaDiagnostico" class="form-control mb-2" placeholder="Digite para filtrar diagnósticos...">
+
+                                <select name="id_diagnostico" id="selectDiagnostico" class="form-select mb-2">
                                     {% for d in diagn_list %}
                                         <option value="{{ d.id }}" {% if d.id == os.id_su_diagnostico %}selected{% endif %}>
                                             {{ d.descricao }}
                                         </option>
                                     {% endfor %}
                                 </select>
+                                
                                 <button class="btn btn-success w-100">Atualizar Diagnóstico</button>
                             </form>
+
+                            <script>
+                                document.getElementById('buscaDiagnostico').addEventListener('input', function() {
+                                    let filtro = this.value.toLowerCase();
+                                    let select = document.getElementById('selectDiagnostico');
+                                    let opcoes = select.options;
+                                    for (let i = 0; i < opcoes.length; i++) {
+                                        let texto = opcoes[i].text.toLowerCase();
+                                        opcoes[i].style.display = texto.includes(filtro) ? "" : "none";
+                                    }
+                                });
+                            </script>
                         {% else %}
                             <div class="alert alert-secondary mt-3">
                                 <small>Esta OS não está finalizada (Status: {{ os.status_formatado }}). 
