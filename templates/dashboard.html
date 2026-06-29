@@ -54,9 +54,14 @@
                             <div class="col-md-3"><strong>Diagnóstico:</strong><br>{{ os.diagnostico_os or 'Nenhum' }}</div>
                         </div>
                         <hr>
-                        <h6>Mensagem de Abertura:</h6><div class="mb-3 msg-box">{{ os.mensagem_abertura_os }}</div>
-                        <h6>Resposta (Finalização):</h6><div class="mb-3 msg-box">{{ os.mensagem_resposta }}</div>
-                        <h6>Justificativa SLA Atrasado:</h6><div class="mb-3 msg-box">{{ os.mensagem_justificativa_os }}</div>
+                        <h6>Mensagem de Abertura:</h6>
+                        <div class="mb-3 msg-box">{{ os.mensagem_abertura_os | default('', true) }}</div>
+                        
+                        <h6>Resposta (Finalização):</h6>
+                        <div class="mb-3 msg-box">{{ os.mensagem_resposta | default('', true) }}</div>
+                        
+                        <h6>Justificativa SLA Atrasado:</h6>
+                        <div class="mb-3 msg-box">{{ os.mensagem_justificativa_os | default('', true) }}</div>
                         
                         {% if os.status_os == 'Finalizada' %}
                             <form action="/update_os" method="POST" class="p-3 border rounded bg-light">
