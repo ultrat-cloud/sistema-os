@@ -49,6 +49,8 @@ def init_routes(app):
                 cur=conn.cursor(dictionary=True)
                 cur.execute("""
                     SELECT t.id, 
+                    c.id AS id_cliente,
+                    c.razao AS cliente,
                     CASE t.status 
                         WHEN 'A' THEN 'Aberta' WHEN 'AN' THEN 'Análise' WHEN 'EN' THEN 'Encaminhada'
                         WHEN 'AS' THEN 'Assumida' WHEN 'AG' THEN 'Agendada' WHEN 'DS' THEN 'Deslocamento'
@@ -58,6 +60,7 @@ def init_routes(app):
                     t.mensagem mensagem_abertura, t.mensagem_resposta, t.justificativa_sla_atrasado mensagem_justificativa,
                     t.id_su_diagnostico, d.descricao diagnostico
                     FROM su_oss_chamado t
+                    LEFT JOIN cliente c ON c.id = t.id_cliente
                     LEFT JOIN su_diagnostico d ON d.id=t.id_su_diagnostico
                     WHERE t.id=%s
                 """,(os_id,))
