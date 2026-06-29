@@ -1,15 +1,22 @@
 import psycopg2, mysql.connector
 import os
-from psycopg2.extras import RealDictCursor
 
+# Conexão com o Banco de Usuários (PostgreSQL / Zabbix)
 def get_pg_conn():
     return psycopg2.connect(
-        host=os.getenv("PG_HOST"), database="provedor_db",
-        user=os.getenv("PG_USER"), password=os.getenv("PG_PASSWORD")
+        host=os.getenv("DB_HOST_ZABBIX"),
+        database=os.getenv("DB_NOME_ZABBIX"),
+        user=os.getenv("DB_USUARIO_ZABBIX"),
+        password=os.getenv("DB_SENHA_ZABBIX"),
+        port=os.getenv("DB_PORTA_ZABBIX")
     )
 
+# Conexão com o Banco de OS (MySQL / IXC)
 def get_mysql_conn():
     return mysql.connector.connect(
-        host=os.getenv("DB_HOST"), user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"), database=os.getenv("DB_NAME")
+        host=os.getenv("DB_HOST_IXC_PROVEDOR"),
+        database=os.getenv("DB_NOME_IXC_PROVEDOR"),
+        user=os.getenv("DB_USUARIO_IXC_PROVEDOR"),
+        password=os.getenv("DB_SENHA_IXC_PROVEDOR"),
+        port=os.getenv("DB_PORTA_IXC_PROVEDOR")
     )
