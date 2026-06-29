@@ -88,7 +88,7 @@
                                 </div>
                             </form>
                         {% else %}
-                            <div class="alert alert-secondary">Edição de diagnóstico disponível apenas para OS Finalizadas (Status: {{ os.status_os }}).</div>
+                            <div class="alert alert-secondary">Edição de diagnóstico disponível apenas para OS Finalizadas.</div>
                         {% endif %}
                     </div>
                 {% elif request.method == 'POST' %}
@@ -105,10 +105,20 @@
         $(document).ready(function() { 
             $('.select2').select2({ width: '100%' }); 
             
-            // Fecha alertas automaticamente após 6 segundos para manter a tela limpa
-            setTimeout(function() {
-                $('.alert').fadeOut('slow');
-            }, 6000);
+            // Auto-logout por inatividade (10 minutos)
+            let timer;
+            function resetTimer() {
+                clearTimeout(timer);
+                timer = setTimeout(() => { window.location.href = "/logout"; }, 600000); 
+            }
+            window.onload = resetTimer;
+            document.onmousemove = resetTimer;
+            document.onkeypress = resetTimer;
+            document.onclick = resetTimer;
+            document.onscroll = resetTimer;
+
+            // Limpa alertas automaticamente
+            setTimeout(function() { $('.alert').fadeOut('slow'); }, 6000);
         });
     </script>
 </body>
