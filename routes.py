@@ -37,53 +37,40 @@ def init_routes(app):
         return render_template("login.html")
 
     @app.route("/dashboard", methods=["GET","POST"])
-    def dashboard():
-        if "user" not in session: return redirect(url_for("login"))
-        
-        os_data = None; diagn_list = []
-        os_id = request.values.get("os_id")
-
-        if os_id:
-            try:
-                conn = get_mysql_conn()
-                cur = conn.cursor(dictionary=True)
-                # SQL com apelidos (AS) que garantem a nomenclatura correta para o HTML
-                cur.execute("""
-                    SELECT t.id, 
-                        c.id AS id_cliente,
-                        c.razao AS cliente,
-                        CASE t.status 
-                            WHEN 'A' THEN 'Aberta' WHEN 'AN' THEN 'Análise' WHEN 'EN' THEN 'Encaminhada'
-                            WHEN 'AS' THEN 'Assumida' WHEN 'AG' THEN 'Agendada' WHEN 'DS' THEN 'Deslocamento'
-                            WHEN 'EX' THEN 'Execução' WHEN 'F' THEN 'Finalizada' WHEN 'RAG' THEN 'Aguardando Reagendamento'
-                            ELSE 'Outro' END status_formatado,
-                        t.status status_raw, 
-                        DATE_FORMAT(t.data_abertura, '%d/%m/%Y %H:%i:%s') AS data_abertura, 
-                        DATE_FORMAT(t.data_agenda, '%d/%m/%Y %H:%i:%s') AS data_agendamento, 
-                        DATE_FORMAT(t.data_fechamento, '%d/%m/%Y %H:%i:%s') AS data_finalizacao,
-                        t.mensagem AS mensagem_abertura, 
-                        t.mensagem_resposta, 
-                        t.justificativa_sla_atrasado AS mensagem_justificativa,
-                        t.id_su_diagnostico, 
-                        d.descricao AS diagnostico
-                        FROM su_oss_chamado t
-                        LEFT JOIN cliente c ON c.id = t.id_cliente
-                        LEFT JOIN su_diagnostico d ON d.id = t.id_su_diagnostico
-                        WHERE t.id = %s
-                """, (os_id,))
-                
-                os_data = cur.fetchone()
-
-                if os_data and os_data["status_raw"] == "F":
-                    cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
-                    diagn_list = cur.fetchall()
-                
-                cur.close(); conn.close()
-            except Exception as e:
-                logging.error(f"Erro na busca de OS {os_id}: {e}")
-                flash("Erro ao conectar no banco de dados.", "danger")
-
-        return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
+        def dashboard():
+            if "user" not in session: return redirect(url_for('login'))
+            
+            os_data = None; diagn_list = []
+            os_id = request.form.get("os_id") # Usando request.form explicitamente
+            
+            print(f"DEBUG: Buscando ID: {os_id}") # Verifique isto no seu terminal
+    
+            if os_id:
+                try:
+                    conn = get_mysql_conn()
+                    cur = conn.cursor(dictionary=True)
+                    sql = """SELECT t.id, c.id AS id_cliente, c.razao AS cliente, 
+                             CASE t.status WHEN 'F' THEN 'Finalizada' ELSE 'Outro' END as status_formatado,
+                             t.status as status_raw, 
+                             DATE_FORMAT(t.data_abertura, '%d/%m/%Y %H:%i:%s') AS data_abertura,
+                             DATE_FORMAT(t.data_agenda, '%d/%m/%Y %H:%i:%s') AS data_agendamento,
+                             DATE_FORMAT(t.data_fechamento, '%d/%m/%Y %H:%i:%s') AS data_finalizacao,
+                             t.mensagem AS mensagem_abertura, t.mensagem_resposta, t.justificativa_sla_atrasado AS mensagem_justificativa,
+                             t.id_su_diagnostico, d.descricao AS diagnostico
+                             FROM su_oss_chamado t 
+                             LEFT JOIN cliente c ON c.id = t.id_cliente
+                             LEFT JOIN su_diagnostico d ON d.id = t.id_su_diagnostico
+                             WHERE t.id = %s"""
+                    cur.execute(sql, (os_id,))
+                    os_data = cur.fetchone()
+                    
+                    if os_data and os_data["status_raw"] == "F":
+                        cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
+                        diagn_list = cur.fetchall()
+                    cur.close(); conn.close()
+                except Exception as e:
+                    logging.error(f"Erro: {e}")
+            return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
     @app.route("/update_os", methods=["POST"])
     def update_os():
