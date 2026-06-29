@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard OS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Dashboard OS</title>
 </head>
 <body class="bg-light">
     <div class="container mt-5">
@@ -18,25 +17,31 @@
                 </form>
 
                 {% if os %}
-                <hr><h5>OS #{{ os.id }}</h5>
-                <p>Status: <span class="badge {{ 'bg-success' if os.status == 'F' else 'bg-warning' }}">{{ os.status }}</span></p>
-                
-                {% if os.status == 'F' %}
-                <form action="/update_os" method="POST">
-                    <input type="hidden" name="os_id" value="{{ os.id }}">
-                    <div class="mb-3">
-                        <label class="form-label">Selecione o Diagnóstico:</label>
-                        <select name="id_diagnostico" class="form-select">
+                <div class="mt-4 p-3 border rounded bg-white">
+                    <h5>Detalhes da OS #{{ os.id }}</h5>
+                    <div class="row">
+                        <div class="col-md-4"><p><strong>Status:</strong> <span class="badge bg-info">{{ os.status_formatado }}</span></p></div>
+                        <div class="col-md-4"><p><strong>Abertura:</strong> {{ os.data_abertura }}</p></div>
+                        <div class="col-md-4"><p><strong>Diagnóstico:</strong> {{ os.diagnostico or 'Nenhum' }}</p></div>
+                    </div>
+                    <p><strong>Agendamento:</strong> {{ os.data_agenda }} | <strong>Fechamento:</strong> {{ os.data_fechamento }}</p>
+                    <hr>
+                    <p><strong>Mensagem Abertura:</strong> {{ os.mensagem_abertura }}</p>
+                    <p><strong>Resposta:</strong> {{ os.mensagem_resposta }}</p>
+                    <p class="text-danger"><strong>Justificativa SLA:</strong> {{ os.mensagem_justificativa }}</p>
+
+                    {% if os.status_raw == 'F' %}
+                    <form action="/update_os" method="POST">
+                        <input type="hidden" name="os_id" value="{{ os.id }}">
+                        <select name="id_diagnostico" class="form-select mb-2">
                             {% for d in diagn_list %}
-                                <option value="{{ d.id }}">{{ d.descricao }}</option>
+                                <option value="{{ d.id }}" {% if d.id == os.id_su_diagnostico %}selected{% endif %}>{{ d.descricao }}</option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100">Atualizar Diagnóstico</button>
-                </form>
-                {% else %}
-                <p class="text-danger">A OS não está finalizada (Status 'F').</p>
-                {% endif %}
+                        <button type="submit" class="btn btn-success w-100">Atualizar Diagnóstico</button>
+                    </form>
+                    {% endif %}
+                </div>
                 {% endif %}
             </div>
         </div>
