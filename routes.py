@@ -47,14 +47,15 @@ def init_routes(app):
             try:
                 conn = get_mysql_conn()
                 cur = conn.cursor(dictionary=True)
-                # SQL limpo para evitar erros de formatação de data direto no banco
                 sql = """SELECT t.id, c.id AS id_cliente, c.razao AS cliente, 
                          CASE t.status WHEN 'F' THEN 'Finalizada' ELSE 'Outro' END as status_formatado,
                          t.status as status_raw, 
                          t.data_abertura, t.data_agenda, t.data_fechamento,
-                         t.mensagem AS mensagem_abertura, t.mensagem_resposta, 
+                         t.mensagem AS mensagem_abertura, 
+                         t.mensagem_resposta, 
                          t.justificativa_sla_atrasado AS mensagem_justificativa,
-                         t.id_su_diagnostico, d.descricao AS diagnostico
+                         t.id_su_diagnostico, 
+                         d.descricao AS diagnostico
                          FROM su_oss_chamado t 
                          LEFT JOIN cliente c ON c.id = t.id_cliente
                          LEFT JOIN su_diagnostico d ON d.id = t.id_su_diagnostico
@@ -62,14 +63,22 @@ def init_routes(app):
                 cur.execute(sql, (os_id,))
                 os_data = cur.fetchone()
                 
-                # Tratamento de segurança para datas (Blindagem)
+                # Tratamento de dados (Blindagem)
                 if os_data:
+                    # Função para formatar datas: retorna vazio se não for data válida ou se for data "zero"
                     def fmt_date(d):
-                        return d.strftime('%d/%m/%Y %H:%M:%S') if hasattr(d, 'strftime') else str(d)
+                        if d and hasattr(d, 'strftime') and d.year > 1900:
+                            return d.strftime('%d/%m/%Y %H:%M:%S')
+                        return ""
                     
                     os_data['data_abertura'] = fmt_date(os_data['data_abertura'])
                     os_data['data_agendamento'] = fmt_date(os_data['data_agenda'])
                     os_data['data_finalizacao'] = fmt_date(os_data['data_fechamento'])
+                    
+                    # Trata campos de texto para evitar 'None'
+                    os_data['mensagem_abertura'] = os_data['mensagem_abertura'] if os_data['mensagem_abertura'] else "Sem mensagem."
+                    os_data['mensagem_resposta'] = os_data['mensagem_resposta'] if os_data['mensagem_resposta'] else "Sem resposta."
+                    os_data['mensagem_justificativa'] = os_data['mensagem_justificativa'] if os_data['mensagem_justificativa'] else "Nenhuma."
                 
                 # Carregar diagnósticos apenas se for OS finalizada
                 if os_data and os_data["status_raw"] == "F":
@@ -78,7 +87,7 @@ def init_routes(app):
                 cur.close(); conn.close()
             except Exception as e:
                 logging.error(f"Erro ao processar ID {os_id}: {str(e)}")
-                flash("Erro técnico: Esta OS possui dados inconsistentes no banco.", "danger")
+                flash("Erro técnico: Esta OS possui dados inconsistentes.", "danger")
                 
         return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
