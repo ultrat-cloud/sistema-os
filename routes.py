@@ -50,11 +50,15 @@ def init_routes(app):
                 sql = """SELECT t.id, c.id AS id_cliente, c.razao AS cliente, 
                          CASE t.status WHEN 'F' THEN 'Finalizada' ELSE 'Outro' END as status_formatado,
                          t.status as status_raw, 
-                         IFNULL(DATE_FORMAT(t.data_abertura, '%d/%m/%Y %H:%i:%s'), '-') AS data_abertura,
-                         IFNULL(DATE_FORMAT(t.data_agenda, '%d/%m/%Y %H:%i:%s'), 'Não definido') AS data_agendamento,
-                         IFNULL(DATE_FORMAT(t.data_fechamento, '%d/%m/%Y %H:%i:%s'), 'Não finalizada') AS data_finalizacao,
-                         t.mensagem AS mensagem_abertura, t.mensagem_resposta, t.justificativa_sla_atrasado AS mensagem_justificativa,
-                         t.id_su_diagnostico, d.descricao AS diagnostico
+                         -- Tratamento seguro para evitar erro de conversão de data
+                         COALESCE(DATE_FORMAT(t.data_abertura, '%d/%m/%Y %H:%i:%s'), '-') AS data_abertura,
+                         COALESCE(DATE_FORMAT(t.data_agenda, '%d/%m/%Y %H:%i:%s'), 'Não definido') AS data_agendamento,
+                         COALESCE(DATE_FORMAT(t.data_fechamento, '%d/%m/%Y %H:%i:%s'), 'Não finalizada') AS data_finalizacao,
+                         t.mensagem AS mensagem_abertura, 
+                         t.mensagem_resposta, 
+                         t.justificativa_sla_atrasado AS mensagem_justificativa,
+                         t.id_su_diagnostico, 
+                         d.descricao AS diagnostico
                          FROM su_oss_chamado t 
                          LEFT JOIN cliente c ON c.id = t.id_cliente
                          LEFT JOIN su_diagnostico d ON d.id = t.id_su_diagnostico
