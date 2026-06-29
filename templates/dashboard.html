@@ -8,7 +8,6 @@
     <title>Dashboard OS</title>
     <style>
         .select2-container .select2-selection--single { height: 38px !important; padding-top: 4px; }
-        .select2-container .select2-selection__rendered { white-space: normal !important; }
         .header-info { padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
         .date-box { font-size: 0.9rem; }
         .msg-box { background-color: #ffffff; padding: 12px; border: 1px solid #dee2e6; border-radius: 5px; white-space: pre-wrap; font-size: 0.9rem; }
@@ -24,13 +23,13 @@
             </div>
 
             <div class="card-body">
-                <form method="POST" class="row g-2 mb-4">
+                <form action="/dashboard" method="POST" class="row g-2 mb-4">
                     <div class="col-auto">
                         <input type="text" name="os_id" class="form-control" placeholder="ID da OS" 
                                value="{{ request.values.get('os_id', '') }}" required>
                     </div>
                     <div class="col-auto">
-                        <button class="btn btn-primary">Buscar</button>
+                        <button type="submit" class="btn btn-primary">Buscar</button>
                     </div>
                 </form>
 
@@ -86,12 +85,12 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <button class="btn btn-success w-100">Atualizar</button>
+                                        <button type="submit" class="btn btn-success w-100">Atualizar</button>
                                     </div>
                                 </div>
                             </form>
                         {% else %}
-                            <div class="alert alert-secondary mt-3">Edição de diagnóstico não permitida para esta OS.</div>
+                            <div class="alert alert-secondary mt-3">Edição de diagnóstico não permitida para esta OS (Status: {{ os.status_formatado }}).</div>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -104,9 +103,6 @@
     <script>
         $(document).ready(function() {
             $('.select2').select2({ width: '100%', placeholder: "Digite para pesquisar...", allowClear: true });
-            $('.select2').on('select2:open', function (e) {
-                window.setTimeout(function () { document.querySelector('.select2-search__field').focus(); }, 0);
-            });
         });
     </script>
 </body>
