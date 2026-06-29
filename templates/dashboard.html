@@ -34,11 +34,9 @@
                 </form>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
+                    {% if messages %}{% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}{% endif %}
                 {% endwith %}
 
                 {% if os %}
@@ -46,7 +44,7 @@
                         <h5>Detalhes da OS #{{ os.id_os }}</h5>
                         <div class="row header-info mb-3">
                             <div class="col-md-3"><strong>ID Ref:</strong><br>{{ os.id_cliente_estrutura or 'N/A' }}</div>
-                            <div class="col-md-6"><strong>Cliente/Estrutura:</strong><br>{{ os.cliente_estrutura or 'Não identificado' }}</div>
+                            <div class="col-md-6"><strong>Cliente / Estrutura:</strong><br>{{ os.cliente_estrutura or 'Não identificado' }}</div>
                             <div class="col-md-3"><strong>Status:</strong><br><span class="badge bg-info">{{ os.status_os }}</span></div>
                         </div>
                         <div class="row mb-3">
@@ -58,7 +56,7 @@
                         <hr>
                         <h6>Mensagem de Abertura:</h6><div class="mb-3 msg-box">{{ os.mensagem_abertura_os }}</div>
                         <h6>Resposta (Finalização):</h6><div class="mb-3 msg-box">{{ os.mensagem_resposta }}</div>
-                        <h6>Justificativa SLA Atrasado:</h6><div class="mb-3 text-danger msg-box">{{ os.mensagem_justificativa_os }}</div>
+                        <h6>Justificativa SLA Atrasado:</h6><div class="mb-3 msg-box">{{ os.mensagem_justificativa_os }}</div>
                         
                         {% if os.status_os == 'Finalizada' %}
                             <form action="/update_os" method="POST" class="p-3 border rounded bg-light">
@@ -77,13 +75,14 @@
                                 </div>
                             </form>
                         {% else %}
-                            <div class="alert alert-secondary">Edição de diagnóstico disponível apenas para OS Finalizadas.</div>
+                            <div class="alert alert-secondary">Edição de diagnóstico disponível apenas para OS Finalizadas (Status: {{ os.status_os }}).</div>
                         {% endif %}
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
