@@ -49,9 +49,11 @@ def init_routes(app):
                 cur = conn.cursor(dictionary=True)
                 sql = """
                 SELECT
-                    tabela_cliente.id						AS id_cliente,
-                    tabela_cliente.razao					AS cliente,
-                    tabela_estrutura.descricao				AS estrutura,
+                    CASE tabela_os.tipo
+                        WHEN 'C' THEN tabela_cliente.id
+                        WHEN 'E' THEN tabela_estrutura.id
+                        ELSE NULL
+                    END										AS id_cliente_estrutura,
                     tabela_os.id							AS id_os,
                     CASE tabela_os.tipo
                         WHEN 'C' THEN tabela_cliente.razao
