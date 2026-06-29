@@ -76,10 +76,10 @@
                             <form action="/update_os" method="POST">
                                 <input type="hidden" name="os_id" value="{{ os.id }}">
                                 
-                                <label class="form-label">Buscar e Alterar Diagnóstico:</label>
-                                <input type="text" id="buscaDiagnostico" class="form-control mb-2" placeholder="Digite para filtrar diagnósticos...">
+                                <label class="form-label fw-bold">Buscar e Alterar Diagnóstico:</label>
+                                <input type="text" id="buscaDiagnostico" class="form-control mb-2" placeholder="🔍 Digite para filtrar...">
 
-                                <select name="id_diagnostico" id="selectDiagnostico" class="form-select mb-2">
+                                <select name="id_diagnostico" id="selectDiagnostico" class="form-select mb-2" size="5">
                                     {% for d in diagn_list %}
                                         <option value="{{ d.id }}" {% if d.id == os.id_su_diagnostico %}selected{% endif %}>
                                             {{ d.descricao }}
