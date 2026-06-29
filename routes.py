@@ -50,26 +50,26 @@ def init_routes(app):
                 # SQL com apelidos (AS) que garantem a nomenclatura correta para o HTML
                 cur.execute("""
                     SELECT t.id, 
-                    c.id AS id_cliente,
-                    c.razao AS cliente,
-                    CASE t.status 
-                        WHEN 'A' THEN 'Aberta' WHEN 'AN' THEN 'Análise' WHEN 'EN' THEN 'Encaminhada'
-                        WHEN 'AS' THEN 'Assumida' WHEN 'AG' THEN 'Agendada' WHEN 'DS' THEN 'Deslocamento'
-                        WHEN 'EX' THEN 'Execução' WHEN 'F' THEN 'Finalizada' WHEN 'RAG' THEN 'Aguardando Reagendamento'
-                        ELSE 'Outro' END status_formatado,
-                    t.status status_raw, 
-                    t.data_abertura, 
-                    t.data_agenda AS data_agendamento, 
-                    t.data_fechamento AS data_finalizacao,
-                    t.mensagem mensagem_abertura, 
-                    t.mensagem_resposta, 
-                    t.justificativa_sla_atrasado mensagem_justificativa,
-                    t.id_su_diagnostico, 
-                    d.descricao diagnostico
-                    FROM su_oss_chamado t
-                    LEFT JOIN cliente c ON c.id = t.id_cliente
-                    LEFT JOIN su_diagnostico d ON d.id = t.id_su_diagnostico
-                    WHERE t.id = %s
+                        c.id AS id_cliente,
+                        c.razao AS cliente,
+                        CASE t.status 
+                            WHEN 'A' THEN 'Aberta' WHEN 'AN' THEN 'Análise' WHEN 'EN' THEN 'Encaminhada'
+                            WHEN 'AS' THEN 'Assumida' WHEN 'AG' THEN 'Agendada' WHEN 'DS' THEN 'Deslocamento'
+                            WHEN 'EX' THEN 'Execução' WHEN 'F' THEN 'Finalizada' WHEN 'RAG' THEN 'Aguardando Reagendamento'
+                            ELSE 'Outro' END status_formatado,
+                        t.status status_raw, 
+                        DATE_FORMAT(t.data_abertura, '%d/%m/%Y %H:%i:%s') AS data_abertura, 
+                        DATE_FORMAT(t.data_agenda, '%d/%m/%Y %H:%i:%s') AS data_agendamento, 
+                        DATE_FORMAT(t.data_fechamento, '%d/%m/%Y %H:%i:%s') AS data_finalizacao,
+                        t.mensagem mensagem_abertura, 
+                        t.mensagem_resposta, 
+                        t.justificativa_sla_atrasado mensagem_justificativa,
+                        t.id_su_diagnostico, 
+                        d.descricao diagnostico
+                        FROM su_oss_chamado t
+                        LEFT JOIN cliente c ON c.id = t.id_cliente
+                        LEFT JOIN su_diagnostico d ON d.id = t.id_su_diagnostico
+                        WHERE t.id = %s;
                 """, (os_id,))
                 
                 os_data = cur.fetchone()
