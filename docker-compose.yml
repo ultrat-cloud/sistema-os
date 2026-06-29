@@ -1,6 +1,9 @@
-version: "3.8"
 services:
   web:
+    image: sistema-os:latest
     build: .
-    ports: ["5001:5000"]
+    container_name: sistema-os-web
+    restart: unless-stopped
+    ports:
+      - "5001:5000"
     env_file: .env
