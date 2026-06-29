@@ -1,34 +1,33 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Adicionando o Select2 para o visual profissional -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <title>Dashboard OS</title>
+    <style>
+        .select2-container .select2-selection--single { height: 38px; padding-top: 5px; }
+    </style>
 </head>
 
 <body class="bg-light">
 
-    <div class="container mt-5">
-        <div class="card shadow">
+    <div class="container mt-4">
+        <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">Consulta de OS</h4>
             </div>
 
             <div class="card-body">
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }} alert-dismissible fade show">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
+                    {% if messages %}{% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}{% endif %}
                 {% endwith %}
 
-                <form method="POST" class="row g-3">
+                <form method="POST" class="row g-2">
                     <div class="col-auto">
                         <input type="text" name="os_id" class="form-control" placeholder="ID da OS" 
                                value="{{ request.values.get('os_id', '') }}" required>
@@ -39,79 +38,44 @@
                 </form>
 
                 {% if os %}
-                    <div class="mt-4 p-3 border rounded bg-white">
+                    <div class="mt-4 p-3 border rounded bg-white shadow-sm">
                         <h5>Detalhes da OS #{{ os.id }}</h5>
-                        
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <strong>ID Cliente:</strong> {{ os.id_cliente }}
-                            </div>
-                            <div class="col-md-6">
-                                <strong>Cliente:</strong> {{ os.cliente }}
-                            </div>
+                            <div class="col-md-6"><strong>ID Cliente:</strong> {{ os.id_cliente }}</div>
+                            <div class="col-md-6"><strong>Cliente:</strong> {{ os.cliente }}</div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-4">
-                                <strong>Status:</strong>
-                                <span class="badge bg-info">{{ os.status_formatado }}</span>
+                        <!-- Área de Detalhes Técnicos (Melhorada) -->
+                        <div class="card bg-light border-0 mb-3">
+                            <div class="card-body p-3">
+                                <small class="text-muted">DADOS TÉCNICOS</small>
+                                <pre style="white-space: pre-wrap; font-size: 0.85rem;" class="mt-2">{{ os.mensagem_abertura }}</pre>
                             </div>
-                            <div class="col-md-4">
-                                <strong>Abertura:</strong> {{ os.data_abertura }}
-                            </div>
-                            <div class="col-md-4">
-                                <strong>Diagnóstico:</strong> {{ os.diagnostico or 'Nenhum' }}
-                            </div>
-                        </div>
-
-                        <hr>
-
-                        <div style="white-space: pre-wrap;">
-                            <p><strong>Mensagem Abertura:</strong><br>{{ os.mensagem_abertura }}</p>
-                            <p><strong>Resposta:</strong><br>{{ os.mensagem_resposta }}</p>
-                            <p class="text-danger"><strong>Justificativa SLA:</strong><br>{{ os.mensagem_justificativa }}</p>
                         </div>
 
                         {% if os.status_raw == 'F' %}
-                            <form action="/update_os" method="POST">
+                            <form action="/update_os" method="POST" class="mt-4 p-3 border rounded bg-light">
                                 <input type="hidden" name="os_id" value="{{ os.id }}">
+                                <label class="form-label fw-bold">Atualizar Diagnóstico:</label>
                                 
-                                <label class="form-label fw-bold">Alterar Diagnóstico:</label>
-                                <!-- Campo de busca com Datalist -->
-                                <input class="form-control mb-2" list="listaDiagnosticos" id="inputDiagnostico" 
-                                       placeholder="Digite para buscar..." autocomplete="off">
-                                
-                                <datalist id="listaDiagnosticos">
-                                    {% for d in diagn_list %}
-                                        <option data-value="{{ d.id }}" value="{{ d.descricao }}">
-                                    {% endfor %}
-                                </datalist>
-
-                                <!-- Campo escondido que envia o ID real ao seu backend -->
-                                <input type="hidden" name="id_diagnostico" id="id_diagnostico_hidden">
-                                
-                                <button class="btn btn-success w-100">Atualizar Diagnóstico</button>
+                                <div class="row g-2">
+                                    <div class="col-md-9">
+                                        <select name="id_diagnostico" class="form-select select2" required>
+                                            <option value="">Selecione um diagnóstico...</option>
+                                            {% for d in diagn_list %}
+                                                <option value="{{ d.id }}" {% if d.id == os.id_su_diagnostico %}selected{% endif %}>
+                                                    {{ d.descricao }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-success w-100">Atualizar</button>
+                                    </div>
+                                </div>
                             </form>
-
-                            <script>
-                                document.getElementById('inputDiagnostico').addEventListener('input', function(e) {
-                                    const input = e.target;
-                                    const list = document.getElementById('listaDiagnosticos');
-                                    const hiddenInput = document.getElementById('id_diagnostico_hidden');
-                                    const option = Array.from(list.options).find(opt => opt.value === input.value);
-                                    
-                                    if (option) {
-                                        hiddenInput.value = option.getAttribute('data-value');
-                                    } else {
-                                        hiddenInput.value = '';
-                                    }
-                                });
-                            </script>
                         {% else %}
-                            <div class="alert alert-secondary mt-3">
-                                <small>Esta OS não está finalizada (Status: {{ os.status_formatado }}). 
-                                Edição de diagnóstico não permitida.</small>
-                            </div>
+                            <div class="alert alert-warning mt-3">OS não finalizada ({{ os.status_formatado }}). Edição desativada.</div>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -119,6 +83,17 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Scripts necessários -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                width: '100%',
+                placeholder: "Digite para pesquisar...",
+                allowClear: true
+            });
+        });
+    </script>
 </body>
 </html>
