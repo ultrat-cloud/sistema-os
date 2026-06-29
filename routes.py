@@ -47,7 +47,7 @@ def init_routes(app):
             try:
                 conn = get_mysql_conn()
                 cur = conn.cursor(dictionary=True)
-                # SQL COMPLETO (Use o SELECT que você definiu)
+                
                 sql = """
                 SELECT
                     CASE tabela_os.tipo
@@ -99,18 +99,16 @@ def init_routes(app):
                     os_data['data_agendamento_os'] = fmt_date(os_data['data_agendamento_os'])
                     os_data['data_fechamento'] = fmt_date(os_data['data_fechamento'])
                     
-                    msg_padrao = "Sem informações disponíveis."
-                    os_data['mensagem_abertura_os'] = os_data['mensagem_abertura_os'] or msg_padrao
-                    os_data['mensagem_resposta'] = os_data['mensagem_resposta'] or msg_padrao
-                    os_data['mensagem_justificativa_os'] = os_data['mensagem_justificativa_os'] or msg_padrao
+                    # REMOVIDO: A lógica que injetava "Sem informações disponíveis"
                     
                     if os_data["status_raw"] == "F":
                         cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
                         diagn_list = cur.fetchall()
+                
                 cur.close(); conn.close()
             except Exception as e:
                 logging.error(f"Erro ao processar ID {os_id}: {e}")
-                flash("Erro técnico: Esta OS possui dados inconsistentes.", "danger")
+                # REMOVIDO: O flash de erro que aparecia na tela
         
         return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
