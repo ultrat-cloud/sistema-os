@@ -131,3 +131,9 @@ def init_routes(app):
             if 'conn' in locals(): conn.close()
             
         return redirect(url_for("dashboard", os_id=os_id))
+
+    @app.route("/logout")
+    def logout():
+        session.pop("user", None)  # Remove o usuário da sessão
+        flash("Você saiu do sistema.", "info")
+        return redirect(url_for("login"))
