@@ -61,15 +61,15 @@ def init_routes(app):
                         DATE_FORMAT(t.data_abertura, '%d/%m/%Y %H:%i:%s') AS data_abertura, 
                         DATE_FORMAT(t.data_agenda, '%d/%m/%Y %H:%i:%s') AS data_agendamento, 
                         DATE_FORMAT(t.data_fechamento, '%d/%m/%Y %H:%i:%s') AS data_finalizacao,
-                        t.mensagem mensagem_abertura, 
+                        t.mensagem AS mensagem_abertura, 
                         t.mensagem_resposta, 
-                        t.justificativa_sla_atrasado mensagem_justificativa,
+                        t.justificativa_sla_atrasado AS mensagem_justificativa,
                         t.id_su_diagnostico, 
-                        d.descricao diagnostico
+                        d.descricao AS diagnostico
                         FROM su_oss_chamado t
                         LEFT JOIN cliente c ON c.id = t.id_cliente
                         LEFT JOIN su_diagnostico d ON d.id = t.id_su_diagnostico
-                        WHERE t.id = %s;
+                        WHERE t.id = %s
                 """, (os_id,))
                 
                 os_data = cur.fetchone()
