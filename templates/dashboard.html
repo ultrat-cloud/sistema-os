@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard de OS</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f4f6f8; }
+        .os-card { background: #fff; padding: 20px; border-radius: 8px; margin-top: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        select, button { padding: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Pesquisar Ordem de Serviço</h2>
+    <form method="POST">
+        <input type="text" name="os_id" placeholder="ID da OS" required>
+        <button type="submit">Buscar</button>
+    </form>
+
+    {% if os %}
+    <div class="os-card">
+        <h3>OS #{{ os.id }} - Status: {{ os.status }}</h3>
+        <p><strong>Assunto:</strong> {{ os.assunto }}</p>
+        <p><strong>Mensagem:</strong> {{ os.mensagem }}</p>
+
+        {% if os.status == 'F' %}
+            <form action="/update_os" method="POST">
+                <input type="hidden" name="os_id" value="{{ os.id }}">
+                <label>Alterar diagnóstico para:</label>
+                <select name="id_diagnostico">
+                    {% for d in diagn_list %}
+                        <option value="{{ d.id_diagnostico }}">{{ d.id_diagnostico }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" style="background: #28a745; color: white;">Salvar Alteração</button>
+            </form>
+        {% endif %}
+    </div>
+    {% endif %}
+</body>
+</html>
