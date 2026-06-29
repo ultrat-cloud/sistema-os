@@ -64,24 +64,27 @@ def init_routes(app):
 
     @app.route("/update_os", methods=["POST"])
     def update_os():
-        if 'user' not in session: return redirect(url_for('login'))
+        # 1. Verifica autenticação
+        if 'user' not in session: 
+            return redirect(url_for('login'))
         
+        # 2. Captura os dados do formulário
         os_id = request.form.get("os_id")
-        id_diagnostico = request.form.get("id_diagnostico") # Este vem do seu HTML
+        novo_diagnostico = request.form.get("id_diagnostico")
         
+        # 3. Executa a atualização no banco
         conn = get_mysql_conn()
         cur = conn.cursor()
-        
         try:
-            # O nome da coluna no banco É 'id_su_diagnostico'
+            # A coluna no banco é 'id_su_diagnostico' conforme seu DESCRIBE
             sql = "UPDATE su_oss_chamado SET id_su_diagnostico = %s WHERE id = %s"
-            cur.execute(sql, (id_diagnostico, os_id))
+            cur.execute(sql, (novo_diagnostico, os_id))
             conn.commit()
         except Exception as e:
-            print(f"Erro ao atualizar: {e}")
-            conn.rollback()
+            print(f"Erro ao salvar diagnóstico: {e}")
         finally:
             cur.close()
             conn.close()
             
+        # 4. Retorna para o dashboard (ou para a mesma OS)
         return redirect(url_for('dashboard'))
