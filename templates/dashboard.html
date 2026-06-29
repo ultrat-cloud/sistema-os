@@ -7,15 +7,11 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <title>Dashboard OS</title>
     <style>
-        /* Ajustes finos para o Select2: evita quebra de layout e permite multilinhas */
         .select2-container .select2-selection--single { height: 38px !important; padding-top: 4px; }
         .select2-container .select2-selection__rendered { white-space: normal !important; }
-        
-        /* Bloco de informações com espaçamento uniforme */
         .header-info { padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
-        
-        /* Estilo para os campos de data */
         .date-box { font-size: 0.9rem; }
+        .msg-box { background-color: #ffffff; padding: 12px; border: 1px solid #dee2e6; border-radius: 5px; white-space: pre-wrap; font-size: 0.9rem; }
     </style>
 </head>
 
@@ -57,11 +53,22 @@
 
                         <hr>
 
-                        <div style="white-space: pre-wrap; font-size: 0.9rem;" class="mb-4 text-secondary">
-                            <p><strong>Mensagem Abertura:</strong><br>{{ os.mensagem_abertura }}</p>
-                            <p><strong>Resposta:</strong><br>{{ os.mensagem_resposta }}</p>
-                            <p class="text-danger"><strong>Justificativa SLA:</strong><br>{{ os.mensagem_justificativa }}</p>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <h6 class="text-primary">Mensagem de Abertura:</h6>
+                                <div class="msg-box">{{ os.mensagem_abertura or 'Sem mensagem de abertura.' }}</div>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <h6 class="text-success">Resposta (Finalização):</h6>
+                                <div class="msg-box">{{ os.mensagem_resposta or 'Sem resposta registrada.' }}</div>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <h6 class="text-danger">Justificativa SLA Atrasado:</h6>
+                                <div class="msg-box" style="color: #dc3545;">{{ os.mensagem_justificativa or 'Nenhuma justificativa necessária.' }}</div>
+                            </div>
                         </div>
+
+                        <hr>
 
                         {% if os.status_raw == 'F' %}
                             <form action="/update_os" method="POST" class="p-3 border rounded bg-light">
@@ -84,9 +91,7 @@
                                 </div>
                             </form>
                         {% else %}
-                            <div class="alert alert-secondary mt-3">
-                                Edição de diagnóstico não permitida para esta OS (Status atual: {{ os.status_formatado }}).
-                            </div>
+                            <div class="alert alert-secondary mt-3">Edição de diagnóstico não permitida para esta OS.</div>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -98,18 +103,9 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Inicializa o Select2
-            $('.select2').select2({ 
-                width: '100%',
-                placeholder: "Digite para pesquisar...",
-                allowClear: true
-            });
-
-            // Foco Automático: assim que o Select2 abre, ele foca no campo de busca
+            $('.select2').select2({ width: '100%', placeholder: "Digite para pesquisar...", allowClear: true });
             $('.select2').on('select2:open', function (e) {
-                window.setTimeout(function () {
-                    document.querySelector('.select2-search__field').focus();
-                }, 0);
+                window.setTimeout(function () { document.querySelector('.select2-search__field').focus(); }, 0);
             });
         });
     </script>
