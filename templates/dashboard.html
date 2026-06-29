@@ -5,7 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
 
     <title>Dashboard OS</title>
 </head>
@@ -22,6 +24,25 @@
 
             <div class="card-body">
 
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+
+                            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                {{ message }}
+
+                                <button
+                                    type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="alert">
+                                </button>
+
+                            </div>
+
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
                 <form method="POST" class="row g-3">
 
                     <div class="col-auto">
@@ -30,11 +51,12 @@
                             name="os_id"
                             class="form-control"
                             placeholder="ID da OS"
+                            value="{{ request.values.get('os_id', '') }}"
                             required>
                     </div>
 
                     <div class="col-auto">
-                        <button type="submit" class="btn btn-primary">
+                        <button class="btn btn-primary">
                             Buscar
                         </button>
                     </div>
@@ -43,92 +65,96 @@
 
                 {% if os %}
 
-                <div class="mt-4 p-3 border rounded bg-white">
+                    <div class="mt-4 p-3 border rounded bg-white">
 
-                    <h5>Detalhes da OS #{{ os.id }}</h5>
+                        <h5>
+                            Detalhes da OS #{{ os.id }}
+                        </h5>
 
-                    <div class="row">
+                        <div class="row">
 
-                        <div class="col-md-4">
-                            <strong>Status:</strong>
-                            <span class="badge bg-info">
-                                {{ os.status_formatado }}
-                            </span>
+                            <div class="col-md-4">
+                                <strong>Status:</strong>
+
+                                <span class="badge bg-info">
+                                    {{ os.status_formatado }}
+                                </span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <strong>Abertura:</strong>
+                                {{ os.data_abertura }}
+                            </div>
+
+                            <div class="col-md-4">
+                                <strong>Diagnóstico:</strong>
+                                {{ os.diagnostico or 'Nenhum' }}
+                            </div>
+
                         </div>
 
-                        <div class="col-md-4">
-                            <strong>Abertura:</strong>
-                            {{ os.data_abertura }}
+                        <hr>
+
+                        <div style="white-space: pre-wrap;">
+
+                            <p>
+                                <strong>Mensagem Abertura:</strong><br>
+                                {{ os.mensagem_abertura }}
+                            </p>
+
+                            <p>
+                                <strong>Resposta:</strong><br>
+                                {{ os.mensagem_resposta }}
+                            </p>
+
+                            <p class="text-danger">
+                                <strong>Justificativa SLA:</strong><br>
+                                {{ os.mensagem_justificativa }}
+                            </p>
+
                         </div>
 
-                        <div class="col-md-4">
-                            <strong>Diagnóstico:</strong>
-                            {{ os.diagnostico or 'Nenhum' }}
-                        </div>
+                        {% if os.status_raw == 'F' %}
+
+                            <form action="/update_os" method="POST">
+
+                                <input
+                                    type="hidden"
+                                    name="os_id"
+                                    value="{{ os.id }}">
+
+                                <label class="form-label">
+                                    Alterar Diagnóstico:
+                                </label>
+
+                                <select
+                                    name="id_diagnostico"
+                                    class="form-select mb-2">
+
+                                    {% for d in diagn_list %}
+
+                                        <option
+                                            value="{{ d.id }}"
+                                            {% if d.id == os.id_su_diagnostico %}selected{% endif %}>
+
+                                            {{ d.descricao }}
+
+                                        </option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                                <button
+                                    class="btn btn-success w-100">
+                                    Atualizar Diagnóstico
+                                </button>
+
+                            </form>
+
+                        {% endif %}
 
                     </div>
-
-                    <hr>
-
-                    <div style="white-space: pre-wrap; font-family: sans-serif;">
-
-                        <p>
-                            <strong>Mensagem Abertura:</strong><br>
-                            {{ os.mensagem_abertura }}
-                        </p>
-
-                        <p>
-                            <strong>Resposta:</strong><br>
-                            {{ os.mensagem_resposta }}
-                        </p>
-
-                        <p class="text-danger">
-                            <strong>Justificativa SLA:</strong><br>
-                            {{ os.mensagem_justificativa }}
-                        </p>
-
-                    </div>
-
-                    {% if os.status_raw == 'F' %}
-
-                    <form action="/update_os" method="POST" class="mt-3">
-
-                        <input
-                            type="hidden"
-                            name="os_id"
-                            value="{{ os.id }}">
-
-                        <label class="form-label">
-                            Alterar Diagnóstico:
-                        </label>
-
-                        <select
-                            name="id_diagnostico"
-                            class="form-select mb-2">
-
-                            {% for d in diagn_list %}
-
-                            <option
-                                value="{{ d.id }}"
-                                {% if d.id == os.id_su_diagnostico %}selected{% endif %}>
-                                {{ d.descricao }}
-                            </option>
-
-                            {% endfor %}
-
-                        </select>
-
-                        <button
-                            type="submit"
-                            class="btn btn-success w-100">
-                            Atualizar Diagnóstico
-                        </button>
-
-                    </form>
-
-                    {% endif %}
-
-                </div>
 
                 {% endif %}
 
@@ -138,6 +164,9 @@
 
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>
+```
