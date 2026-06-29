@@ -48,53 +48,52 @@ def init_routes(app):
                 conn = get_mysql_conn()
                 cur = conn.cursor(dictionary=True)
                 sql = """
-                SELECT 
-                    tabela_os.id,
-                    tabela_cliente.id AS id_cliente,
-                    tabela_cliente.razao AS cliente,
-                    tabela_estrutura.descricao AS estrutura,
-                
+                SELECT
+                    tabela_cliente.id						AS id_cliente,
+                    tabela_cliente.razao					AS cliente,
+                    tabela_estrutura.descricao				AS estrutura,
+                    tabela_os.id							AS id_os,
                     CASE tabela_os.tipo
                         WHEN 'C' THEN tabela_cliente.razao
                         WHEN 'E' THEN tabela_estrutura.descricao
                         ELSE NULL
-                    END AS cliente_estrutura,
-                
-                    CASE tabela_os.status 
-                        WHEN 'A' THEN 'Aberta'
+                    END										AS cliente_estrutura,
+                    CASE tabela_os.status
+                        WHEN 'A'  THEN 'Aberta'
                         WHEN 'AN' THEN 'Análise'
                         WHEN 'EN' THEN 'Encaminhada'
                         WHEN 'AS' THEN 'Assumida'
                         WHEN 'AG' THEN 'Agendada'
                         WHEN 'DS' THEN 'Deslocamento'
                         WHEN 'EX' THEN 'Execução'
-                        WHEN 'F' THEN 'Finalizada'
+                        WHEN 'F'  THEN 'Finalizada'
                         WHEN 'RAG' THEN 'Aguardando Reagendamento'
-                        ELSE 'Outro'
-                    END AS status_formatado,
-                
-                    tabela_os.status AS status_raw,
+                        ELSE NULL
+                    END										AS status_os,
                     tabela_os.data_abertura,
-                    tabela_os.data_agenda,
+                    tabela_os.data_agenda					AS data_agendamento_os,
                     tabela_os.data_fechamento,
-                    tabela_os.mensagem AS mensagem_abertura,
+                    tabela_os.mensagem						AS mensagem_abertura_os,
                     tabela_os.mensagem_resposta,
-                    tabela_os.justificativa_sla_atrasado AS mensagem_justificativa,
+                    tabela_os.justificativa_sla_atrasado	AS mensagem_justificativa_os,
                     tabela_os.id_su_diagnostico,
-                    tabela_diagnostico.descricao AS diagnostico
-                
-                FROM su_oss_chamado AS tabela_os
-                
-                LEFT JOIN cliente AS tabela_cliente
-                    ON tabela_cliente.id = tabela_os.id_cliente
-                
-                LEFT JOIN estrutura AS tabela_estrutura
-                    ON tabela_estrutura.id = tabela_os.id_estrutura
-                
-                LEFT JOIN su_diagnostico AS tabela_diagnostico
-                    ON tabela_diagnostico.id = tabela_os.id_su_diagnostico
-                
-                WHERE tabela_os.id = %s
+                    tabela_diagnostico.descricao			AS diagnostico_os
+                FROM
+                	su_oss_chamado							AS tabela_os
+                LEFT JOIN
+                	cliente									AS tabela_cliente
+                    	ON tabela_cliente.id = tabela_os.id_cliente
+                LEFT JOIN
+                	estrutura								AS tabela_estrutura
+                    	ON tabela_estrutura.id = tabela_os.id_estrutura
+                LEFT JOIN
+                	su_oss_assunto							AS tabela_assunto
+                    	ON tabela_assunto.id = tabela_os.id_assunto
+                LEFT JOIN
+                	su_diagnostico							AS tabela_diagnostico
+                    	ON tabela_diagnostico.id = tabela_os.id_su_diagnostico
+                WHERE
+                    tabela_os.id = %s
                 """
                 cur.execute(sql, (os_id,))
                 os_data = cur.fetchone()
