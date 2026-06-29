@@ -7,11 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <title>Dashboard OS</title>
     <style>
-        /* Ajustes para o Select2 não quebrar e ficar alinhado */
         .select2-container .select2-selection--single { height: 38px !important; padding-top: 4px; }
         .select2-container .select2-selection__rendered { white-space: normal !important; }
-        
-        /* Garante que o cabeçalho interno tenha espaçamento uniforme */
         .header-info { padding: 10px; background-color: #f8f9fa; border-radius: 5px; }
     </style>
 </head>
@@ -46,8 +43,10 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6"><strong>Abertura:</strong> {{ os.data_abertura }}</div>
-                            <div class="col-md-6"><strong>Diagnóstico:</strong> {{ os.diagnostico or 'Nenhum' }}</div>
+                            <div class="col-md-3"><strong>Abertura:</strong><br>{{ os.data_abertura }}</div>
+                            <div class="col-md-3"><strong>Agendamento:</strong><br>{{ os.data_agendamento or 'Não definido' }}</div>
+                            <div class="col-md-3"><strong>Finalização:</strong><br>{{ os.data_finalizacao or 'Não finalizada' }}</div>
+                            <div class="col-md-3"><strong>Diagnóstico:</strong><br>{{ os.diagnostico or 'Nenhum' }}</div>
                         </div>
 
                         <hr>
@@ -91,7 +90,17 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('.select2').select2({ width: '100%' });
+            // Inicializa o Select2
+            $('.select2').select2({ 
+                width: '100%',
+                placeholder: "Digite para pesquisar...",
+                allowClear: true
+            });
+
+            // Força o foco no campo de busca assim que o componente é aberto
+            $('.select2').on('select2:open', function (e) {
+                document.querySelector('.select2-search__field').focus();
+            });
         });
     </script>
 </body>
