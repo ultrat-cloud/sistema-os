@@ -98,37 +98,34 @@ def init_routes(app):
                     tabela_os.id = %s
                 """
                 cur.execute(sql, (os_id,))
-                os_data = cur.fetchone()
-                
-                # Tratamento de dados (Blindagem)
-                if os_data:
-                    # Função para formatar datas: retorna vazio se não for data válida ou se for data "zero"
-                    def fmt_date(d):
-                        if d and hasattr(d, 'strftime') and d.year > 1900:
-                            return d.strftime('%d/%m/%Y %H:%M:%S')
-                        return ""
-                    
-                    os_data['data_abertura'] = fmt_date(os_data['data_abertura'])
-                    os_data['data_agendamento'] = fmt_date(os_data['data_agenda'])
-                    os_data['data_finalizacao'] = fmt_date(os_data['data_fechamento'])
-                    
-                    # MENSAGEM PADRÃO PADRONIZADA
-                    msg_padrao = "Sem informações disponíveis."
-                    
-                    os_data['mensagem_abertura'] = os_data['mensagem_abertura'] if os_data['mensagem_abertura'] else msg_padrao
-                    os_data['mensagem_resposta'] = os_data['mensagem_resposta'] if os_data['mensagem_resposta'] else msg_padrao
-                    os_data['mensagem_justificativa'] = os_data['mensagem_justificativa'] if os_data['mensagem_justificativa'] else msg_padrao
-                
-                # Carregar diagnósticos apenas se for OS finalizada
-                if os_data and os_data["status_raw"] == "F":
-                    cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
-                    diagn_list = cur.fetchall()
-                cur.close(); conn.close()
-            except Exception as e:
-                logging.error(f"Erro ao processar ID {os_id}: {str(e)}")
-                flash("Erro técnico: Esta OS possui dados inconsistentes.", "danger")
-                
-        return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
+                                os_data = cur.fetchone()
+                                
+                                if os_data:
+                                    def fmt_date(d):
+                                        return d.strftime('%d/%m/%Y %H:%M:%S') if d and hasattr(d, 'strftime') and d.year > 1900 else ""
+                                    
+                                    os_data['data_abertura'] = fmt_date(os_data['data_abertura'])
+                                    os_data['data_agendamento_os'] = fmt_date(os_data['data_agendamento_os'])
+                                    os_data['data_fechamento'] = fmt_date(os_data['data_fechamento'])
+                                    
+                                    # Padronização de mensagens
+                                    msg_padrao = "Sem informações disponíveis."
+                                    os_data['mensagem_abertura_os'] = os_data['mensagem_abertura_os'] or msg_padrao
+                                    os_data['mensagem_resposta'] = os_data['mensagem_resposta'] or msg_padrao
+                                    os_data['mensagem_justificativa_os'] = os_data['mensagem_justificativa_os'] or msg_padrao
+                                    
+                                    # CRÍTICO: Criamos o status_raw baseando-se no status retornado pelo SELECT
+                                    os_data['status_raw'] = 'F' if os_data['status_os'] == 'Finalizada' else 'Outro'
+                                    
+                                    if os_data["status_raw"] == "F":
+                                        cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
+                                        diagn_list = cur.fetchall()
+                                cur.close(); conn.close()
+                            except Exception as e:
+                                logging.error(f"Erro: {e}")
+                                flash("Erro técnico: Dados inconsistentes.", "danger")
+                        
+                        return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
     @app.route("/update_os", methods=["POST"])
     def update_os():
