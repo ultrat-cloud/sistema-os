@@ -33,29 +33,29 @@ def init_routes(app):
             conn = get_mysql_conn()
             cur = conn.cursor(dictionary=True)
             
-            # Query completa conforme seu SQL original
+            # Query completa incluindo campos técnicos conforme a estrutura da tabela
             cur.execute("""
-                SELECT
-                    tabela_os.id,
-                    CASE tabela_os.status
-                        WHEN 'A'  THEN 'Aberta' WHEN 'AN'  THEN 'Análise' WHEN 'EN' THEN 'Encaminhada'
+                SELECT 
+                    t.id, 
+                    CASE t.status 
+                        WHEN 'A' THEN 'Aberta' WHEN 'AN' THEN 'Análise' WHEN 'EN' THEN 'Encaminhada'
                         WHEN 'AS' THEN 'Assumida' WHEN 'AG' THEN 'Agendada' WHEN 'DS' THEN 'Deslocamento'
                         WHEN 'EX' THEN 'Execução' WHEN 'F' THEN 'Finalizada' WHEN 'RAG' THEN 'Aguardando Reagendamento'
                         ELSE 'Outro'
                     END AS status_formatado,
-                    tabela_os.status AS status_raw,
-                    tabela_os.data_abertura, tabela_os.data_agenda, tabela_os.data_fechamento,
-                    tabela_os.mensagem AS mensagem_abertura, tabela_os.mensagem_resposta,
-                    tabela_os.justificativa_sla_atrasado AS mensagem_justificativa,
-                    tabela_os.id_su_diagnostico,
-                    tabela_diagnostico.descricao AS diagnostico
-                FROM su_oss_chamado AS tabela_os
-                LEFT JOIN su_diagnostico AS tabela_diagnostico ON tabela_diagnostico.id = tabela_os.id_su_diagnostico
-                WHERE tabela_os.id = %s
+                    t.status AS status_raw,
+                    t.data_abertura, t.data_agenda, t.data_fechamento,
+                    t.mensagem AS mensagem_abertura, 
+                    t.mensagem_resposta,
+                    t.justificativa_sla_atrasado AS mensagem_justificativa,
+                    t.id_su_diagnostico,
+                    d.descricao AS diagnostico
+                FROM su_oss_chamado AS t
+                LEFT JOIN su_diagnostico AS d ON d.id = t.id_su_diagnostico
+                WHERE t.id = %s
             """, (os_id,))
             os_data = cur.fetchone()
             
-            # Busca diagnósticos apenas se for necessário (ex: status Finalizada 'F')
             if os_data and os_data['status_raw'] == 'F':
                 cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
                 diagn_list = cur.fetchall()
