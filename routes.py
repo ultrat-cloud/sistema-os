@@ -57,20 +57,31 @@ def init_routes(app):
     def update_os():
         if "user" not in session:
             return redirect(url_for("login"))
-        os_id=request.form.get("os_id")
-        novo=request.form.get("id_diagnostico")
-        conn=get_mysql_conn()
-        cur=conn.cursor()
+    
+        os_id = request.form.get("os_id")
+        novo = request.form.get("id_diagnostico")
+    
+        conn = get_mysql_conn()
+        cur = conn.cursor()
+    
         try:
-            cur.execute("UPDATE su_oss_chamado SET id_su_diagnostico=%s WHERE id=%s",(novo,os_id))
+            cur.execute(
+                "UPDATE su_oss_chamado SET id_su_diagnostico=%s WHERE id=%s",
+                (novo, os_id)
+            )
             conn.commit()
+    
             if cur.rowcount:
-                flash("Diagnóstico atualizado com sucesso!","success")
+                flash("Diagnóstico atualizado com sucesso!", "success")
             else:
-                flash("Nenhuma OS encontrada.","warning")
+                flash("Nenhuma OS encontrada.", "warning")
+    
         except Exception as e:
             conn.rollback()
-            flash(f"Erro ao salvar diagnóstico: {e}","danger")
+            flash(f"Erro ao salvar diagnóstico: {e}", "danger")
+    
         finally:
-            cur.close(); conn.close()
-        return redirect(url_for("dashboard",os_id=os_id))
+            cur.close()
+            conn.close()
+    
+        return redirect(url_for("dashboard"))
