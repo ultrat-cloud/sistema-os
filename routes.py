@@ -33,7 +33,7 @@ def init_routes(app):
                 flash("Acesso negado.", "danger")
             except Exception as e:
                 logging.error(f"Erro no login: {e}")
-                flash("Erro na conexão com banco de autenticação.", "danger")
+                flash("Erro ao tentar conectar com o serviço de autenticação.", "danger")
         return render_template("login.html")
 
     @app.route("/dashboard", methods=["GET","POST"])
@@ -99,16 +99,14 @@ def init_routes(app):
                     os_data['data_agendamento_os'] = fmt_date(os_data['data_agendamento_os'])
                     os_data['data_fechamento'] = fmt_date(os_data['data_fechamento'])
                     
-                    # REMOVIDO: A lógica que injetava "Sem informações disponíveis"
-                    
                     if os_data["status_raw"] == "F":
                         cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
                         diagn_list = cur.fetchall()
                 
                 cur.close(); conn.close()
             except Exception as e:
-                logging.error(f"Erro ao processar ID {os_id}: {e}")
-                # REMOVIDO: O flash de erro que aparecia na tela
+                logging.error(f"Erro ao consultar banco de dados para a OS {os_id}: {e}")
+                flash("Ocorreu um erro ao buscar os dados. Por favor, verifique a conexão com o banco de dados.", "danger")
         
         return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
@@ -117,16 +115,19 @@ def init_routes(app):
         if "user" not in session: return redirect(url_for("login"))
         os_id = request.form.get("os_id")
         novo = request.form.get("id_diagnostico")
-        conn = get_mysql_conn()
-        cur = conn.cursor()
+        
         try:
+            conn = get_mysql_conn()
+            cur = conn.cursor()
             cur.execute("UPDATE su_oss_chamado SET id_su_diagnostico=%s WHERE id=%s", (novo, os_id))
             conn.commit()
             flash("Atualizado com sucesso!", "success")
         except Exception as e:
-            conn.rollback()
-            logging.error(f"Erro ao atualizar OS {os_id}: {e}")
-            flash("Erro ao salvar dados no banco.", "danger")
+            if 'conn' in locals(): conn.rollback()
+            logging.error(f"Erro ao atualizar o diagnóstico da OS {os_id}: {e}")
+            flash("Não foi possível salvar a alteração. O sistema de banco de dados não respondeu.", "danger")
         finally:
-            cur.close(); conn.close()
-        return redirect(url_for("dashboard"))
+            if 'cur' in locals(): cur.close()
+            if 'conn' in locals(): conn.close()
+            
+        return redirect(url_for("dashboard", os_id=os_id))
