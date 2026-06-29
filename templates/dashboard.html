@@ -10,14 +10,8 @@
         .select2-container .select2-selection--single { height: 38px !important; padding-top: 4px; }
         .header-info { padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
         .msg-box { 
-            background-color: #fcfcfc; 
-            padding: 12px; 
-            border: 1px solid #dee2e6; 
-            border-radius: 5px; 
-            white-space: pre-wrap; 
-            font-size: 0.9rem;
-            min-height: 50px;
-            color: #495057;
+            background-color: #fcfcfc; padding: 12px; border: 1px solid #dee2e6; border-radius: 5px; 
+            white-space: pre-wrap; font-size: 0.9rem; min-height: 50px; color: #495057;
         }
         h6 { color: #0d6efd; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 5px; }
     </style>
@@ -27,60 +21,37 @@
         <div class="card shadow">
             <div class="card-header bg-primary text-white"><h4>Consulta de OS</h4></div>
             <div class="card-body">
-                
                 <form action="/dashboard" method="POST" class="row g-2 mb-4">
-                    <div class="col-auto">
-                        <input type="text" name="os_id" class="form-control" placeholder="ID da OS" 
-                               value="{{ request.values.get('os_id', '') }}" required>
-                    </div>
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-primary">Buscar</button>
-                    </div>
+                    <div class="col-auto"><input type="text" name="os_id" class="form-control" placeholder="ID da OS" value="{{ request.values.get('os_id', '') }}" required></div>
+                    <div class="col-auto"><button type="submit" class="btn btn-primary">Buscar</button></div>
                 </form>
 
                 {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">{{ message }}</div>
-                        {% endfor %}
-                    {% endif %}
+                    {% if messages %}{% for category, message in messages %}<div class="alert alert-{{ category }}">{{ message }}</div>{% endfor %}{% endif %}
                 {% endwith %}
-
-                {% if request.method == 'POST' and not os %}
-                    <div class="alert alert-warning">Nenhuma OS encontrada com este ID.</div>
-                {% endif %}
 
                 {% if os %}
                     <div class="mt-4 p-3 border rounded bg-white">
-                        <h5>Detalhes da OS #{{ os.id }}</h5>
+                        <h5>Detalhes da OS #{{ os.id_os }}</h5>
                         <div class="row header-info mb-3">
-                            <div class="col-md-3"><strong>ID Cliente:</strong><br>{{ os.id_cliente }}</div>
-                            <div class="col-md-6"><strong>Cliente:</strong><br>{{ os.cliente }}</div>
-                            <div class="col-md-3"><strong>Status:</strong><br><span class="badge bg-info">{{ os.status_formatado }}</span></div>
+                            <div class="col-md-3"><strong>ID Cliente:</strong><br>{{ os.id_cliente or 'N/A' }}</div>
+                            <div class="col-md-6"><strong>Cliente / Estrutura:</strong><br>{{ os.cliente_estrutura }}</div>
+                            <div class="col-md-3"><strong>Status:</strong><br><span class="badge bg-info">{{ os.status_os }}</span></div>
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-3"><strong>Abertura:</strong><br>{{ os.data_abertura }}</div>
-                            <div class="col-md-3"><strong>Agendamento:</strong><br>{{ os.data_agendamento }}</div>
-                            <div class="col-md-3"><strong>Finalização:</strong><br>{{ os.data_finalizacao }}</div>
-                            <div class="col-md-3"><strong>Diagnóstico:</strong><br>{{ os.diagnostico or 'Nenhum' }}</div>
+                            <div class="col-md-3"><strong>Agendamento:</strong><br>{{ os.data_agendamento_os }}</div>
+                            <div class="col-md-3"><strong>Finalização:</strong><br>{{ os.data_fechamento }}</div>
+                            <div class="col-md-3"><strong>Diagnóstico:</strong><br>{{ os.diagnostico_os or 'Nenhum' }}</div>
                         </div>
                         <hr>
-                        <div class="mb-3">
-                            <h6>Mensagem de Abertura:</h6>
-                            <div class="msg-box">{{ os.mensagem_abertura }}</div>
-                        </div>
-                        <div class="mb-3">
-                            <h6>Resposta (Finalização):</h6>
-                            <div class="msg-box">{{ os.mensagem_resposta }}</div>
-                        </div>
-                        <div class="mb-3 text-danger">
-                            <h6>Justificativa SLA Atrasado:</h6>
-                            <div class="msg-box">{{ os.mensagem_justificativa }}</div>
-                        </div>
+                        <h6>Mensagem de Abertura:</h6><div class="mb-3 msg-box">{{ os.mensagem_abertura_os }}</div>
+                        <h6>Resposta (Finalização):</h6><div class="mb-3 msg-box">{{ os.mensagem_resposta }}</div>
+                        <h6>Justificativa SLA Atrasado:</h6><div class="mb-3 text-danger msg-box">{{ os.mensagem_justificativa_os }}</div>
                         
-                        {% if os.status_raw == 'F' %}
+                        {% if os.status_os == 'Finalizada' %}
                             <form action="/update_os" method="POST" class="p-3 border rounded bg-light">
-                                <input type="hidden" name="os_id" value="{{ os.id }}">
+                                <input type="hidden" name="os_id" value="{{ os.id_os }}">
                                 <label class="fw-bold">Alterar Diagnóstico:</label>
                                 <div class="row g-2">
                                     <div class="col-md-9">
@@ -95,20 +66,15 @@
                                 </div>
                             </form>
                         {% else %}
-                            <div class="alert alert-secondary">Edição de diagnóstico disponível apenas para OS Finalizadas (Status: {{ os.status_formatado }}).</div>
+                            <div class="alert alert-secondary">Edição de diagnóstico disponível apenas para OS Finalizadas.</div>
                         {% endif %}
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
-    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function() { 
-            $('.select2').select2({ width: '100%' }); 
-        });
-    </script>
+    <script>$(document).ready(function() { $('.select2').select2({ width: '100%' }); });</script>
 </body>
 </html>
