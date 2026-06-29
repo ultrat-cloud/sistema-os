@@ -37,14 +37,14 @@ def init_routes(app):
         return render_template("login.html")
 
     @app.route("/dashboard", methods=["GET","POST"])
-        def dashboard():
+        def dashboard(): # <-- Removi o recuo excessivo aqui
             if "user" not in session: return redirect(url_for('login'))
             
             os_data = None; diagn_list = []
-            os_id = request.form.get("os_id") # Usando request.form explicitamente
+            os_id = request.form.get("os_id")
             
-            print(f"DEBUG: Buscando ID: {os_id}") # Verifique isto no seu terminal
-    
+            print(f"DEBUG: Buscando ID: {os_id}")
+            
             if os_id:
                 try:
                     conn = get_mysql_conn()
@@ -71,7 +71,7 @@ def init_routes(app):
                 except Exception as e:
                     logging.error(f"Erro: {e}")
             return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
-
+    
     @app.route("/update_os", methods=["POST"])
     def update_os():
         if "user" not in session: return redirect(url_for("login"))
