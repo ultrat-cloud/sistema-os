@@ -9,7 +9,17 @@
     <style>
         .select2-container .select2-selection--single { height: 38px !important; padding-top: 4px; }
         .header-info { padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
-        .msg-box { background-color: #ffffff; padding: 12px; border: 1px solid #dee2e6; border-radius: 5px; white-space: pre-wrap; font-size: 0.9rem; }
+        .msg-box { 
+            background-color: #fcfcfc; 
+            padding: 12px; 
+            border: 1px solid #dee2e6; 
+            border-radius: 5px; 
+            white-space: pre-wrap; 
+            font-size: 0.9rem;
+            min-height: 50px;
+            color: #495057;
+        }
+        h6 { color: #0d6efd; font-size: 0.85rem; text-transform: uppercase; margin-bottom: 5px; }
     </style>
 </head>
 <body class="bg-light">
@@ -49,23 +59,23 @@
                             <div class="col-md-3"><strong>Status:</strong><br><span class="badge bg-info">{{ os.status_formatado }}</span></div>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-md-3"><strong>Abertura:</strong><br>{{ os.data_abertura or '-' }}</div>
-                            <div class="col-md-3"><strong>Agendamento:</strong><br>{{ os.data_agendamento or 'Não definido' }}</div>
-                            <div class="col-md-3"><strong>Finalização:</strong><br>{{ os.data_finalizacao or 'Não finalizada' }}</div>
+                            <div class="col-md-3"><strong>Abertura:</strong><br>{{ os.data_abertura }}</div>
+                            <div class="col-md-3"><strong>Agendamento:</strong><br>{{ os.data_agendamento }}</div>
+                            <div class="col-md-3"><strong>Finalização:</strong><br>{{ os.data_finalizacao }}</div>
                             <div class="col-md-3"><strong>Diagnóstico:</strong><br>{{ os.diagnostico or 'Nenhum' }}</div>
                         </div>
                         <hr>
                         <div class="mb-3">
                             <h6>Mensagem de Abertura:</h6>
-                            <div class="msg-box">{{ os.mensagem_abertura or 'Sem mensagem.' }}</div>
+                            <div class="msg-box">{{ os.mensagem_abertura }}</div>
                         </div>
                         <div class="mb-3">
                             <h6>Resposta (Finalização):</h6>
-                            <div class="msg-box">{{ os.mensagem_resposta or 'Sem resposta.' }}</div>
+                            <div class="msg-box">{{ os.mensagem_resposta }}</div>
                         </div>
                         <div class="mb-3 text-danger">
                             <h6>Justificativa SLA Atrasado:</h6>
-                            <div class="msg-box">{{ os.mensagem_justificativa or 'Nenhuma.' }}</div>
+                            <div class="msg-box">{{ os.mensagem_justificativa }}</div>
                         </div>
                         
                         {% if os.status_raw == 'F' %}
