@@ -29,8 +29,9 @@ def init_routes(app):
                 cur.close(); conn.close()
                 
                 if user and bcrypt.checkpw(senha, user["senha_hash"].encode("utf-8")):
-                    # Segurança: Ativa a sessão permanente definida no main.py
-                    session.permanent = False  
+                    # A sessão é gerenciada pelo servidor (2 horas configuradas no main.py)
+                    # Usamos permanent=True para respeitar o tempo do servidor
+                    session.permanent = True  
                     session["user"] = user["nome"]
                     get_flashed_messages() 
                     return redirect(url_for("dashboard"))
@@ -53,9 +54,8 @@ def init_routes(app):
             try:
                 conn = get_mysql_conn()
                 cur = conn.cursor(dictionary=True)
-                
                 sql = """
-                SELECT
+                SELECT 
                     CASE tabela_os.tipo WHEN 'C' THEN tabela_cliente.id WHEN 'E' THEN tabela_estrutura.id ELSE NULL END AS id_cliente_estrutura,
                     tabela_os.id AS id_os,
                     CASE tabela_os.tipo WHEN 'C' THEN tabela_cliente.razao WHEN 'E' THEN tabela_estrutura.descricao ELSE NULL END AS cliente_estrutura,
@@ -89,11 +89,10 @@ def init_routes(app):
                     if os_data["status_raw"] == "F":
                         cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
                         diagn_list = cur.fetchall()
-                
                 cur.close(); conn.close()
             except Exception as e:
                 logging.error(f"Erro ao buscar OS {os_id}: {e}")
-                flash("Erro de comunicação com o servidor de dados. Verifique a conexão.", "danger")
+                flash("Erro de comunicação com o servidor de dados.", "danger")
         
         return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
@@ -111,28 +110,15 @@ def init_routes(app):
             flash("Diagnóstico atualizado com sucesso!", "success")
         except Exception as e:
             if 'conn' in locals(): conn.rollback()
-            erro_str = str(e).lower()
             logging.error(f"Erro ao atualizar OS {os_id}: {e}")
-            
-            # Diagnóstico instruído para o usuário final
-            if "denied" in erro_str or "privilege" in erro_str:
-                msg = "Erro de Permissão: O usuário não possui privilégio de escrita no banco."
-            elif "foreign key" in erro_str:
-                msg = "Erro de Integridade: O diagnóstico selecionado é inválido."
-            elif "lost connection" in erro_str or "gone away" in erro_str:
-                msg = "Erro de Conexão: O banco de dados desconectou."
-            else:
-                msg = f"Falha ao salvar: {str(e)}"
-            
-            flash(msg, "danger")
+            flash("Falha ao salvar no banco de dados.", "danger")
         finally:
             if 'cur' in locals(): cur.close()
             if 'conn' in locals(): conn.close()
-            
         return redirect(url_for("dashboard", os_id=os_id))
 
     @app.route("/logout")
     def logout():
-        session.pop("user", None)
+        session.clear() # Limpa a sessão completamente
         flash("Você saiu do sistema.", "info")
         return redirect(url_for("login"))
