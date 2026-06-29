@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, session, url_for, flash
+from flask import render_template, request, redirect, session, url_for, flash, get_flashed_messages
 from database import get_pg_conn, get_mysql_conn
 import bcrypt
 from psycopg2.extras import RealDictCursor
@@ -29,7 +29,12 @@ def init_routes(app):
                 cur.close(); conn.close()
                 if user and bcrypt.checkpw(senha, user["senha_hash"].encode("utf-8")):
                     session["user"] = user["nome"]
+                    # Limpa mensagens antigas antes de redirecionar para o sucesso
+                    get_flashed_messages() 
                     return redirect(url_for("dashboard"))
+                
+                # Se falhar, limpa mensagens anteriores para não empilhar erro sobre erro
+                get_flashed_messages()
                 flash("Acesso negado.", "danger")
             except Exception as e:
                 logging.error(f"Erro no login: {e}")
@@ -50,38 +55,19 @@ def init_routes(app):
                 
                 sql = """
                 SELECT
-                    CASE tabela_os.tipo
-                        WHEN 'C' THEN tabela_cliente.id
-                        WHEN 'E' THEN tabela_estrutura.id
-                        ELSE NULL
-                    END AS id_cliente_estrutura,
+                    CASE tabela_os.tipo WHEN 'C' THEN tabela_cliente.id WHEN 'E' THEN tabela_estrutura.id ELSE NULL END AS id_cliente_estrutura,
                     tabela_os.id AS id_os,
-                    CASE tabela_os.tipo
-                        WHEN 'C' THEN tabela_cliente.razao
-                        WHEN 'E' THEN tabela_estrutura.descricao
-                        ELSE NULL
-                    END AS cliente_estrutura,
-                    CASE tabela_os.status
-                        WHEN 'A' THEN 'Aberta'
-                        WHEN 'AN' THEN 'Análise'
-                        WHEN 'EN' THEN 'Encaminhada'
-                        WHEN 'AS' THEN 'Assumida'
-                        WHEN 'AG' THEN 'Agendada'
-                        WHEN 'DS' THEN 'Deslocamento'
-                        WHEN 'EX' THEN 'Execução'
-                        WHEN 'F' THEN 'Finalizada'
-                        WHEN 'RAG' THEN 'Aguardando Reagendamento'
-                        ELSE 'Outro'
-                    END AS status_os,
+                    CASE tabela_os.tipo WHEN 'C' THEN tabela_cliente.razao WHEN 'E' THEN tabela_estrutura.descricao ELSE NULL END AS cliente_estrutura,
+                    CASE tabela_os.status 
+                        WHEN 'A' THEN 'Aberta' WHEN 'AN' THEN 'Análise' WHEN 'EN' THEN 'Encaminhada' 
+                        WHEN 'AS' THEN 'Assumida' WHEN 'AG' THEN 'Agendada' WHEN 'DS' THEN 'Deslocamento' 
+                        WHEN 'EX' THEN 'Execução' WHEN 'F' THEN 'Finalizada' WHEN 'RAG' THEN 'Aguardando Reagendamento' 
+                        ELSE 'Outro' END AS status_os,
                     tabela_os.status AS status_raw,
-                    tabela_os.data_abertura,
-                    tabela_os.data_agenda AS data_agendamento_os,
-                    tabela_os.data_fechamento,
-                    tabela_os.mensagem AS mensagem_abertura_os,
-                    tabela_os.mensagem_resposta,
+                    tabela_os.data_abertura, tabela_os.data_agenda AS data_agendamento_os, tabela_os.data_fechamento,
+                    tabela_os.mensagem AS mensagem_abertura_os, tabela_os.mensagem_resposta,
                     tabela_os.justificativa_sla_atrasado AS mensagem_justificativa_os,
-                    tabela_os.id_su_diagnostico,
-                    tabela_diagnostico.descricao AS diagnostico_os
+                    tabela_os.id_su_diagnostico, tabela_diagnostico.descricao AS diagnostico_os
                 FROM su_oss_chamado AS tabela_os
                 LEFT JOIN cliente AS tabela_cliente ON tabela_cliente.id = tabela_os.id_cliente
                 LEFT JOIN estrutura AS tabela_estrutura ON tabela_estrutura.id = tabela_os.id_estrutura
@@ -125,7 +111,7 @@ def init_routes(app):
         except Exception as e:
             if 'conn' in locals(): conn.rollback()
             logging.error(f"Erro ao atualizar OS {os_id}: {e}")
-            flash("Falha ao salvar as alterações no banco de dados.", "danger")
+            flash("Falha ao salvar as alterações.", "danger")
         finally:
             if 'cur' in locals(): cur.close()
             if 'conn' in locals(): conn.close()
@@ -134,6 +120,8 @@ def init_routes(app):
 
     @app.route("/logout")
     def logout():
-        session.pop("user", None)  # Remove o usuário da sessão
+        # Limpa todas as mensagens pendentes antes de sair
+        get_flashed_messages()
+        session.pop("user", None)
         flash("Você saiu do sistema.", "info")
         return redirect(url_for("login"))
