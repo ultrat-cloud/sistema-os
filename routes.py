@@ -33,7 +33,7 @@ def init_routes(app):
                 flash("Acesso negado.", "danger")
             except Exception as e:
                 logging.error(f"Erro no login: {e}")
-                flash("Erro ao tentar conectar com o serviço de autenticação.", "danger")
+                flash("Serviço de autenticação temporariamente indisponível.", "danger")
         return render_template("login.html")
 
     @app.route("/dashboard", methods=["GET","POST"])
@@ -105,8 +105,8 @@ def init_routes(app):
                 
                 cur.close(); conn.close()
             except Exception as e:
-                logging.error(f"Erro ao consultar banco de dados para a OS {os_id}: {e}")
-                flash("Ocorreu um erro ao buscar os dados. Por favor, verifique a conexão com o banco de dados.", "danger")
+                logging.error(f"Erro ao buscar OS {os_id}: {e}")
+                flash("Erro de comunicação com o servidor de dados.", "danger")
         
         return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
@@ -121,11 +121,11 @@ def init_routes(app):
             cur = conn.cursor()
             cur.execute("UPDATE su_oss_chamado SET id_su_diagnostico=%s WHERE id=%s", (novo, os_id))
             conn.commit()
-            flash("Atualizado com sucesso!", "success")
+            flash("Diagnóstico atualizado com sucesso!", "success")
         except Exception as e:
             if 'conn' in locals(): conn.rollback()
-            logging.error(f"Erro ao atualizar o diagnóstico da OS {os_id}: {e}")
-            flash("Não foi possível salvar a alteração. O sistema de banco de dados não respondeu.", "danger")
+            logging.error(f"Erro ao atualizar OS {os_id}: {e}")
+            flash("Falha ao salvar as alterações no banco de dados.", "danger")
         finally:
             if 'cur' in locals(): cur.close()
             if 'conn' in locals(): conn.close()
