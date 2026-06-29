@@ -32,18 +32,15 @@ def init_routes(app):
             os_id = request.form.get("os_id")
             conn = get_mysql_conn()
             cur = conn.cursor(dictionary=True)
-            # Busca OS com JOIN no assunto
-            cur.execute("""SELECT su_oss_chamado.*, su_oss_assunto.assunto 
-                           FROM su_oss_chamado 
-                           LEFT JOIN su_oss_assunto ON su_oss_assunto.id = su_oss_chamado.id_assunto 
-                           WHERE su_oss_chamado.id = %s""", (os_id,))
+            # Busca OS principal
+            cur.execute("SELECT id, id_assunto, status FROM su_oss_chamado WHERE id = %s", (os_id,))
             os_data = cur.fetchone()
             
-            # Busca diagnósticos permitidos pelo JOIN com tabela de diagnósticos
+            # Busca diagnósticos permitidos (Usando colunas reais: id, descricao)
             if os_data and os_data['status'] == 'F':
-                cur.execute("""SELECT d.id_diagnostico, d.nome_diagnostico 
+                cur.execute("""SELECT d.id, d.descricao 
                                FROM diagnostico_assunto da
-                               JOIN su_diagnostico d ON d.id_diagnostico = da.id_diagnostico
+                               JOIN su_diagnostico d ON d.id = da.id_diagnostico
                                WHERE da.id_assunto = %s AND da.ativo = 'S'""", (os_data['id_assunto'],))
                 diagn_list = cur.fetchall()
             conn.close()
@@ -57,4 +54,4 @@ def init_routes(app):
         cur.execute("UPDATE su_oss_chamado SET id_su_diagnostico = %s WHERE id = %s", 
                     (request.form.get("id_diagnostico"), request.form.get("os_id")))
         conn.commit(); conn.close()
-        return "OS atualizada! <a href='/dashboard'>Voltar</a>"
+        return "OS atualizada com sucesso! <a href='/dashboard'>Voltar</a>"
