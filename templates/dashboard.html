@@ -9,19 +9,13 @@
     <style>
         .select2-container .select2-selection--single { height: 38px !important; padding-top: 4px; }
         .header-info { padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
-        .date-box { font-size: 0.9rem; }
         .msg-box { background-color: #ffffff; padding: 12px; border: 1px solid #dee2e6; border-radius: 5px; white-space: pre-wrap; font-size: 0.9rem; }
     </style>
 </head>
-
 <body class="bg-light">
-
     <div class="container mt-4">
         <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">Consulta de OS</h4>
-            </div>
-
+            <div class="card-header bg-primary text-white"><h4>Consulta de OS</h4></div>
             <div class="card-body">
                 <form action="/dashboard" method="POST" class="row g-2 mb-4">
                     <div class="col-auto">
@@ -33,77 +27,62 @@
                     </div>
                 </form>
 
+                {% if request.method == 'POST' and not os %}
+                    <div class="alert alert-warning">Nenhuma OS encontrada com este ID.</div>
+                {% endif %}
+
                 {% if os %}
                     <div class="mt-4 p-3 border rounded bg-white">
-                        <h5 class="mb-3">Detalhes da OS #{{ os.id }}</h5>
-                        
+                        <h5>Detalhes da OS #{{ os.id }}</h5>
                         <div class="row header-info mb-3">
                             <div class="col-md-3"><strong>ID Cliente:</strong><br>{{ os.id_cliente }}</div>
                             <div class="col-md-6"><strong>Cliente:</strong><br>{{ os.cliente }}</div>
                             <div class="col-md-3"><strong>Status:</strong><br><span class="badge bg-info">{{ os.status_formatado }}</span></div>
                         </div>
-
-                        <div class="row mb-3 date-box">
+                        <div class="row mb-3">
                             <div class="col-md-3"><strong>Abertura:</strong><br>{{ os.data_abertura or '-' }}</div>
                             <div class="col-md-3"><strong>Agendamento:</strong><br>{{ os.data_agendamento or 'Não definido' }}</div>
                             <div class="col-md-3"><strong>Finalização:</strong><br>{{ os.data_finalizacao or 'Não finalizada' }}</div>
                             <div class="col-md-3"><strong>Diagnóstico:</strong><br>{{ os.diagnostico or 'Nenhum' }}</div>
                         </div>
-
                         <hr>
-
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <h6 class="text-primary">Mensagem de Abertura:</h6>
-                                <div class="msg-box">{{ os.mensagem_abertura or 'Sem mensagem de abertura.' }}</div>
-                            </div>
-                            <div class="col-md-12 mb-3">
-                                <h6 class="text-success">Resposta (Finalização):</h6>
-                                <div class="msg-box">{{ os.mensagem_resposta or 'Sem resposta registrada.' }}</div>
-                            </div>
-                            <div class="col-md-12 mb-3">
-                                <h6 class="text-danger">Justificativa SLA Atrasado:</h6>
-                                <div class="msg-box" style="color: #dc3545;">{{ os.mensagem_justificativa or 'Nenhuma justificativa necessária.' }}</div>
-                            </div>
+                        <div class="mb-3">
+                            <h6>Mensagem de Abertura:</h6>
+                            <div class="msg-box">{{ os.mensagem_abertura or 'Sem mensagem.' }}</div>
                         </div>
-
-                        <hr>
-
+                        <div class="mb-3">
+                            <h6>Resposta (Finalização):</h6>
+                            <div class="msg-box">{{ os.mensagem_resposta or 'Sem resposta.' }}</div>
+                        </div>
+                        <div class="mb-3 text-danger">
+                            <h6>Justificativa SLA Atrasado:</h6>
+                            <div class="msg-box">{{ os.mensagem_justificativa or 'Nenhuma.' }}</div>
+                        </div>
+                        
                         {% if os.status_raw == 'F' %}
                             <form action="/update_os" method="POST" class="p-3 border rounded bg-light">
                                 <input type="hidden" name="os_id" value="{{ os.id }}">
-                                <label class="form-label fw-bold">Alterar Diagnóstico:</label>
+                                <label class="fw-bold">Alterar Diagnóstico:</label>
                                 <div class="row g-2">
                                     <div class="col-md-9">
                                         <select name="id_diagnostico" class="form-select select2" required>
-                                            <option value="">Selecione um diagnóstico...</option>
+                                            <option value="">Selecione...</option>
                                             {% for d in diagn_list %}
-                                                <option value="{{ d.id }}" {% if d.id == os.id_su_diagnostico %}selected{% endif %}>
-                                                    {{ d.descricao }}
-                                                </option>
+                                                <option value="{{ d.id }}" {% if d.id == os.id_su_diagnostico %}selected{% endif %}>{{ d.descricao }}</option>
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <div class="col-md-3">
-                                        <button type="submit" class="btn btn-success w-100">Atualizar</button>
-                                    </div>
+                                    <div class="col-md-3"><button type="submit" class="btn btn-success w-100">Atualizar</button></div>
                                 </div>
                             </form>
-                        {% else %}
-                            <div class="alert alert-secondary mt-3">Edição de diagnóstico não permitida para esta OS (Status: {{ os.status_formatado }}).</div>
                         {% endif %}
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('.select2').select2({ width: '100%', placeholder: "Digite para pesquisar...", allowClear: true });
-        });
-    </script>
+    <script>$(document).ready(function() { $('.select2').select2({ width: '100%' }); });</script>
 </body>
 </html>
