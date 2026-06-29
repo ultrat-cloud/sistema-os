@@ -29,11 +29,9 @@ def init_routes(app):
                 cur.close(); conn.close()
                 if user and bcrypt.checkpw(senha, user["senha_hash"].encode("utf-8")):
                     session["user"] = user["nome"]
-                    # Limpa mensagens antigas antes de redirecionar para o sucesso
                     get_flashed_messages() 
                     return redirect(url_for("dashboard"))
                 
-                # Se falhar, limpa mensagens anteriores para não empilhar erro sobre erro
                 get_flashed_messages()
                 flash("Acesso negado.", "danger")
             except Exception as e:
@@ -92,7 +90,7 @@ def init_routes(app):
                 cur.close(); conn.close()
             except Exception as e:
                 logging.error(f"Erro ao buscar OS {os_id}: {e}")
-                flash("Erro de comunicação com o servidor de dados.", "danger")
+                flash("Erro de comunicação com o servidor de dados. Verifique a conexão.", "danger")
         
         return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
@@ -110,8 +108,20 @@ def init_routes(app):
             flash("Diagnóstico atualizado com sucesso!", "success")
         except Exception as e:
             if 'conn' in locals(): conn.rollback()
+            erro_str = str(e).lower()
             logging.error(f"Erro ao atualizar OS {os_id}: {e}")
-            flash("Falha ao salvar as alterações.", "danger")
+            
+            # Aqui está o norte para o problema:
+            if "denied" in erro_str or "privilege" in erro_str:
+                msg = "Erro de Permissão: O usuário do banco não tem permissão para esta alteração (UPDATE)."
+            elif "foreign key" in erro_str:
+                msg = "Erro de Integridade: O diagnóstico selecionado é inválido."
+            elif "lost connection" in erro_str or "gone away" in erro_str:
+                msg = "Erro de Conexão: O banco de dados desconectou durante a gravação."
+            else:
+                msg = f"Falha ao salvar: {str(e)}"
+            
+            flash(msg, "danger")
         finally:
             if 'cur' in locals(): cur.close()
             if 'conn' in locals(): conn.close()
@@ -120,7 +130,6 @@ def init_routes(app):
 
     @app.route("/logout")
     def logout():
-        # Limpa todas as mensagens pendentes antes de sair
         get_flashed_messages()
         session.pop("user", None)
         flash("Você saiu do sistema.", "info")
