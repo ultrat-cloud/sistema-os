@@ -75,10 +75,12 @@ def init_routes(app):
                     os_data['data_agendamento'] = fmt_date(os_data['data_agenda'])
                     os_data['data_finalizacao'] = fmt_date(os_data['data_fechamento'])
                     
-                    # Trata campos de texto para evitar 'None'
-                    os_data['mensagem_abertura'] = os_data['mensagem_abertura'] if os_data['mensagem_abertura'] else "Sem mensagem."
-                    os_data['mensagem_resposta'] = os_data['mensagem_resposta'] if os_data['mensagem_resposta'] else "Sem resposta."
-                    os_data['mensagem_justificativa'] = os_data['mensagem_justificativa'] if os_data['mensagem_justificativa'] else "Nenhuma."
+                    # MENSAGEM PADRÃO PADRONIZADA
+                    msg_padrao = "Sem informações disponíveis."
+                    
+                    os_data['mensagem_abertura'] = os_data['mensagem_abertura'] if os_data['mensagem_abertura'] else msg_padrao
+                    os_data['mensagem_resposta'] = os_data['mensagem_resposta'] if os_data['mensagem_resposta'] else msg_padrao
+                    os_data['mensagem_justificativa'] = os_data['mensagem_justificativa'] if os_data['mensagem_justificativa'] else msg_padrao
                 
                 # Carregar diagnósticos apenas se for OS finalizada
                 if os_data and os_data["status_raw"] == "F":
