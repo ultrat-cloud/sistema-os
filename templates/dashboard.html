@@ -7,9 +7,15 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <title>Dashboard OS</title>
     <style>
+        /* Ajustes finos para o Select2 */
         .select2-container .select2-selection--single { height: 38px !important; padding-top: 4px; }
         .select2-container .select2-selection__rendered { white-space: normal !important; }
-        .header-info { padding: 10px; background-color: #f8f9fa; border-radius: 5px; }
+        
+        /* Bloco de informações para manter alinhamento */
+        .header-info { padding: 15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef; }
+        
+        /* Estilo para garantir que as datas não quebrem o layout */
+        .date-box { font-size: 0.9rem; }
     </style>
 </head>
 
@@ -42,8 +48,8 @@
                             <div class="col-md-3"><strong>Status:</strong><br><span class="badge bg-info">{{ os.status_formatado }}</span></div>
                         </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-3"><strong>Abertura:</strong><br>{{ os.data_abertura }}</div>
+                        <div class="row mb-3 date-box">
+                            <div class="col-md-3"><strong>Abertura:</strong><br>{{ os.data_abertura or '-' }}</div>
                             <div class="col-md-3"><strong>Agendamento:</strong><br>{{ os.data_agendamento or 'Não definido' }}</div>
                             <div class="col-md-3"><strong>Finalização:</strong><br>{{ os.data_finalizacao or 'Não finalizada' }}</div>
                             <div class="col-md-3"><strong>Diagnóstico:</strong><br>{{ os.diagnostico or 'Nenhum' }}</div>
@@ -51,7 +57,7 @@
 
                         <hr>
 
-                        <div style="white-space: pre-wrap; font-size: 0.9rem;" class="mb-4">
+                        <div style="white-space: pre-wrap; font-size: 0.9rem;" class="mb-4 text-secondary">
                             <p><strong>Mensagem Abertura:</strong><br>{{ os.mensagem_abertura }}</p>
                             <p><strong>Resposta:</strong><br>{{ os.mensagem_resposta }}</p>
                             <p class="text-danger"><strong>Justificativa SLA:</strong><br>{{ os.mensagem_justificativa }}</p>
@@ -78,7 +84,9 @@
                                 </div>
                             </form>
                         {% else %}
-                            <div class="alert alert-secondary mt-3">Edição de diagnóstico não permitida para esta OS.</div>
+                            <div class="alert alert-secondary mt-3">
+                                Edição de diagnóstico não permitida para esta OS (Status atual: {{ os.status_formatado }}).
+                            </div>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -97,9 +105,11 @@
                 allowClear: true
             });
 
-            // Força o foco no campo de busca assim que o componente é aberto
+            // Força o foco no campo de busca ao abrir
             $('.select2').on('select2:open', function (e) {
-                document.querySelector('.select2-search__field').focus();
+                window.setTimeout(function () {
+                    document.querySelector('.select2-search__field').focus();
+                }, 0);
             });
         });
     </script>
