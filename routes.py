@@ -65,9 +65,23 @@ def init_routes(app):
     @app.route("/update_os", methods=["POST"])
     def update_os():
         if 'user' not in session: return redirect(url_for('login'))
+        
+        os_id = request.form.get("os_id")
+        id_diagnostico = request.form.get("id_diagnostico") # Este vem do seu HTML
+        
         conn = get_mysql_conn()
         cur = conn.cursor()
-        cur.execute("UPDATE su_oss_chamado SET id_su_diagnostico = %s WHERE id = %s", 
-                    (request.form.get("id_diagnostico"), request.form.get("os_id")))
-        conn.commit(); conn.close()
-        return "OS atualizada com sucesso! <a href='/dashboard'>Voltar</a>"
+        
+        try:
+            # O nome da coluna no banco É 'id_su_diagnostico'
+            sql = "UPDATE su_oss_chamado SET id_su_diagnostico = %s WHERE id = %s"
+            cur.execute(sql, (id_diagnostico, os_id))
+            conn.commit()
+        except Exception as e:
+            print(f"Erro ao atualizar: {e}")
+            conn.rollback()
+        finally:
+            cur.close()
+            conn.close()
+            
+        return redirect(url_for('dashboard'))
