@@ -4,6 +4,7 @@ import bcrypt
 from psycopg2.extras import RealDictCursor
 import logging
 
+# Configuração de logs
 logging.basicConfig(
     filename="erros_os.log",
     level=logging.ERROR,
@@ -46,19 +47,14 @@ def init_routes(app):
             try:
                 conn = get_mysql_conn()
                 cur = conn.cursor(dictionary=True)
-                # SQL Reforçado: usamos IFNULL para evitar que datas ruins quebrem o DATE_FORMAT
+                # SQL limpo para evitar erros de formatação de data direto no banco
                 sql = """SELECT t.id, c.id AS id_cliente, c.razao AS cliente, 
                          CASE t.status WHEN 'F' THEN 'Finalizada' ELSE 'Outro' END as status_formatado,
                          t.status as status_raw, 
-                         -- Tratamento seguro para evitar erro de conversão de data
-                         COALESCE(DATE_FORMAT(t.data_abertura, '%d/%m/%Y %H:%i:%s'), '-') AS data_abertura,
-                         COALESCE(DATE_FORMAT(t.data_agenda, '%d/%m/%Y %H:%i:%s'), 'Não definido') AS data_agendamento,
-                         COALESCE(DATE_FORMAT(t.data_fechamento, '%d/%m/%Y %H:%i:%s'), 'Não finalizada') AS data_finalizacao,
-                         t.mensagem AS mensagem_abertura, 
-                         t.mensagem_resposta, 
+                         t.data_abertura, t.data_agenda, t.data_fechamento,
+                         t.mensagem AS mensagem_abertura, t.mensagem_resposta, 
                          t.justificativa_sla_atrasado AS mensagem_justificativa,
-                         t.id_su_diagnostico, 
-                         d.descricao AS diagnostico
+                         t.id_su_diagnostico, d.descricao AS diagnostico
                          FROM su_oss_chamado t 
                          LEFT JOIN cliente c ON c.id = t.id_cliente
                          LEFT JOIN su_diagnostico d ON d.id = t.id_su_diagnostico
@@ -66,13 +62,23 @@ def init_routes(app):
                 cur.execute(sql, (os_id,))
                 os_data = cur.fetchone()
                 
+                # Tratamento de segurança para datas (Blindagem)
+                if os_data:
+                    def fmt_date(d):
+                        return d.strftime('%d/%m/%Y %H:%M:%S') if hasattr(d, 'strftime') else str(d)
+                    
+                    os_data['data_abertura'] = fmt_date(os_data['data_abertura'])
+                    os_data['data_agendamento'] = fmt_date(os_data['data_agenda'])
+                    os_data['data_finalizacao'] = fmt_date(os_data['data_fechamento'])
+                
+                # Carregar diagnósticos apenas se for OS finalizada
                 if os_data and os_data["status_raw"] == "F":
                     cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
                     diagn_list = cur.fetchall()
                 cur.close(); conn.close()
             except Exception as e:
-                logging.error(f"Erro na busca do ID {os_id}: {str(e)}")
-                flash("Ocorreu um erro ao processar esta OS específica.", "danger")
+                logging.error(f"Erro ao processar ID {os_id}: {str(e)}")
+                flash("Erro técnico: Esta OS possui dados inconsistentes no banco.", "danger")
                 
         return render_template("dashboard.html", os=os_data, diagn_list=diagn_list)
 
@@ -90,7 +96,7 @@ def init_routes(app):
         except Exception as e:
             conn.rollback()
             logging.error(f"Erro ao atualizar OS {os_id}: {e}")
-            flash("Erro ao salvar dados.", "danger")
+            flash("Erro ao salvar dados no banco.", "danger")
         finally:
             cur.close(); conn.close()
         return redirect(url_for("dashboard"))
