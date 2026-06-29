@@ -7,3 +7,14 @@ services:
     ports:
       - "5001:5000"
     env_file: .env
+    networks:
+      - proxy
+      - rede-zabbix
+
+networks:
+  proxy:
+    external: true
+    name: proxy
+  rede-zabbix:
+    external: true
+    name: zabbix_zabbix-net
