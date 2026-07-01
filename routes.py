@@ -56,23 +56,51 @@ def init_routes(app):
                 cur = conn.cursor(dictionary=True)
                 sql = """
                 SELECT 
-                    CASE tabela_os.tipo WHEN 'C' THEN tabela_cliente.id WHEN 'E' THEN tabela_estrutura.id ELSE NULL END AS id_cliente_estrutura,
+                    CASE
+                        tabela_os.tipo
+                            WHEN 'C' THEN tabela_cliente.id
+                            WHEN 'E' THEN tabela_estrutura.id
+                            ELSE NULL
+                    END AS id_cliente_estrutura,
                     tabela_os.id AS id_os,
-                    CASE tabela_os.tipo WHEN 'C' THEN tabela_cliente.razao WHEN 'E' THEN tabela_estrutura.descricao ELSE NULL END AS cliente_estrutura,
-                    CASE tabela_os.status 
-                        WHEN 'A' THEN 'Aberta' WHEN 'AN' THEN 'Análise' WHEN 'EN' THEN 'Encaminhada' 
-                        WHEN 'AS' THEN 'Assumida' WHEN 'AG' THEN 'Agendada' WHEN 'DS' THEN 'Deslocamento' 
-                        WHEN 'EX' THEN 'Execução' WHEN 'F' THEN 'Finalizada' WHEN 'RAG' THEN 'Aguardando Reagendamento' 
-                        ELSE 'Outro' END AS status_os,
+                    CASE
+                        tabela_os.tipo WHEN 'C' THEN tabela_cliente.razao
+                        WHEN 'E' THEN tabela_estrutura.descricao
+                        ELSE NULL
+                    END AS cliente_estrutura,
+                    CASE
+                        tabela_os.status 
+                            WHEN 'A' THEN 'Aberta'
+                            WHEN 'AN' THEN 'Análise'
+                            WHEN 'EN' THEN 'Encaminhada' 
+                            WHEN 'AS' THEN 'Assumida'
+                            WHEN 'AG' THEN 'Agendada'
+                            WHEN 'DS' THEN 'Deslocamento' 
+                            WHEN 'EX' THEN 'Execução'
+                            WHEN 'F' THEN 'Finalizada'
+                            WHEN 'RAG' THEN 'Aguardando Reagendamento' 
+                            ELSE 'Outro'
+                    END AS status_os,
                     tabela_os.status AS status_raw,
-                    tabela_os.data_abertura, tabela_os.data_agenda AS data_agendamento_os, tabela_os.data_fechamento,
-                    tabela_os.mensagem AS mensagem_abertura_os, tabela_os.mensagem_resposta,
+                    tabela_os.id_assunto,
+                    tabela_os.data_abertura,
+                    tabela_os.data_agenda AS data_agendamento_os,
+                    tabela_os.data_fechamento,
+                    tabela_os.mensagem AS mensagem_abertura_os,
+                    tabela_os.mensagem_resposta,
                     tabela_os.justificativa_sla_atrasado AS mensagem_justificativa_os,
-                    tabela_os.id_su_diagnostico, tabela_diagnostico.descricao AS diagnostico_os
-                FROM su_oss_chamado AS tabela_os
-                LEFT JOIN cliente AS tabela_cliente ON tabela_cliente.id = tabela_os.id_cliente
-                LEFT JOIN estrutura AS tabela_estrutura ON tabela_estrutura.id = tabela_os.id_estrutura
-                LEFT JOIN su_diagnostico AS tabela_diagnostico ON tabela_diagnostico.id = tabela_os.id_su_diagnostico
+                    tabela_os.id_su_diagnostico,
+                    tabela_diagnostico.descricao AS diagnostico_os
+                FROM
+                    su_oss_chamado AS tabela_os
+                LEFT JOIN
+                    cliente AS tabela_cliente
+                        ON tabela_cliente.id = tabela_os.id_cliente
+                LEFT JOIN
+                    estrutura AS tabela_estrutura
+                        ON tabela_estrutura.id = tabela_os.id_estrutura
+                LEFT JOIN su_diagnostico AS tabela_diagnostico
+                    ON tabela_diagnostico.id = tabela_os.id_su_diagnostico
                 WHERE tabela_os.id = %s
                 """
                 cur.execute(sql, (os_id,))
@@ -85,9 +113,17 @@ def init_routes(app):
                     os_data['data_abertura'] = fmt_date(os_data['data_abertura'])
                     os_data['data_agendamento_os'] = fmt_date(os_data['data_agendamento_os'])
                     os_data['data_fechamento'] = fmt_date(os_data['data_fechamento'])
-                    
+
                     if os_data["status_raw"] == "F":
-                        cur.execute("SELECT id, descricao FROM su_diagnostico WHERE ativo = 'S'")
+                        cur.execute("""
+                            SELECT d.id, d.descricao
+                            FROM diagnostico_assunto da
+                            JOIN su_diagnostico d ON d.id = da.id_diagnostico
+                            WHERE da.ativo = 'S'
+                              AND d.ativo = 'S'
+                              AND da.id_assunto = %s
+                            ORDER BY d.descricao
+                        """, (os_data["id_assunto"],))
                         diagn_list = cur.fetchall()
                 cur.close(); conn.close()
             except Exception as e:
